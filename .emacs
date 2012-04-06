@@ -33,14 +33,9 @@
 ;;M-x  eval-buffer   使当前的buffer中的设置语句立刻生效。
 ;;M-x  load-file ~/.emacs  载入.emacs文件，从而使其中的设置生效。
 
-
 ;;设置个人信息
 (setq user-full-name "whufanwei")
 (setq user-mail-address "whufanwei@gmail.com")
-(setq track-eol t);; 当光标在行尾上下移动的时候，始终保持在行尾。
-;; 有空去凑个热闹吧，中文的哟
-
-
 
 (require 're-builder)
 (setq reb-re-syntax 'string)
@@ -64,10 +59,8 @@
 
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
-;; S-<up>、S-<right>跳转到上面、右边
 
 (setq shell-file-name "/bin/bash")
-;; 打开shell
 (global-set-key (kbd "C-c z") 'shell)
 
 (require 'ess-site)
@@ -78,8 +71,6 @@
 (setq uniquify-after-kill-buffer-p t) ; rename after killing uniquified
 (setq uniquify-ignore-buffers-re "^\\*") ; don't muck with special buffers
 
-
-;; ----------------------------保存上次退出是的位置--------------------
 (require 'saveplace)
 (setq-default save-place t)
 (desktop-save-mode 1)
@@ -110,33 +101,22 @@
                            ac-source-abbrev
                            ac-source-files-in-current-dir    
                            ac-source-filename))   
-
-(setq ac-auto-start 2) 
+(setq ac-auto-start 1) 
 (global-auto-complete-mode t)
 
-;; --------------------------------------cua--------------------
 (setq cua-enable-cua-keys nil) ;; only for rectangles
-;; (cua-mode t)
 
-;; use clipboard
 (setq x-select-enable-clipboard t)
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 
-
-;;设置打开文件的缺省路径
 (setq default-directory "/home/fan/")
 
 (ido-mode t)
 
 (setq visible-bell t)
-;;关闭烦人的出错时的提示声
 (setq inhibit-startup-message t)
-;;关闭emacs启动时的画面
-
 (fset 'yes-or-no-p 'y-or-n-p)
-;; 改变 Emacs 固执的要你回答 yes 的行为。按 y 或空格键表示 yes，n 表示 no。
-
 (setq kill-ring-max 200)
 
 ;; (setq-default indent-tabs-mode nil)
@@ -145,7 +125,6 @@
 
 (setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\($\\|[ \t]\\)\\)[ \t\n]*")
 (setq sentence-end-double-space nil)
-;;设置 sentence-end 可以识别中文标点。不用在 fill 时在句号后插入两个空格。
 
 (setq enable-recursive-minibuffers t)
 ;;可以递归的使用 minibuffer
@@ -153,23 +132,18 @@
 (setq-default auto-fill-function 'do-auto-fill)
 (setq default-fill-column 100)
 (setq default-major-mode 'org-mode)
-;;设置缺省主模式是text，,并进入auto-fill次模式.而不是基本模式fundamental-mode
 
 (setq frame-title-format "%b")
-;;在标题栏显示buffer的名字，而不是 emacs@wangyin.com 这样没用的提示。
 
 (setq auto-image-file-mode t)
 
 (setq global-font-lock-mode t)
-;;进行语法加亮。
 
 (setq-default word-wrap t)
 
 (setq-default make-backup-files nil)
-;; 不生成临时文件
 
 (setq mouse-yank-at-point t)
-;;使用鼠标中键可以粘贴
 (setq time-stamp-active t)
 (setq time-stamp-warn-inactive t)
 (setq time-stamp-format "%:y-m-d : H:M:S chunyu")
@@ -304,7 +278,7 @@ frames with exactly two windows."
       (skip-chars-backward "^([<>'‘“\"") (setq p1 (point))
       (skip-chars-forward "^)]<>'’”\"") (setq p2 (point))
       (delete-region p1 p2))))
-(global-set-key (kbd "C-d") 'delete-enclosed-text);;删除括号内的内容。
+;; (global-set-key (kbd "C-d") 'delete-enclosed-text);;删除括号内的内容。
 (global-set-key (kbd "C-M-d") 'delete-pair);;删除括号。
 
 (defun joseph-jump-to-space-forward()
@@ -490,11 +464,6 @@ frames with exactly two windows."
 
 (global-set-key (kbd "C-c y") 'anything-show-kill-ring)
 
-;; ;; (load "~/emacs/extension/haskell-mode/haskell-site-file")
-;; ;; (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
-;; ;; (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
-;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
-;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
 
 (add-to-list 'load-path "~/emacs/extension/magit") 
 (require 'magit)
@@ -1046,5 +1015,6 @@ A prefix arg forces clock in of the default task."
       'mew-user-agent-compose
       'mew-draft-send-message
       'mew-draft-kill
-      'mew-send-hook))
+      '))
+
 

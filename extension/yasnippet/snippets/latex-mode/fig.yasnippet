@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# contributor : Mads D. Kristensen <madsdk@gmail.com>
+# key : fig
+# group: environments
+# name : \begin{figure} ... \end{figure}
+# --
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=$0\textwidth{},keepaspectratio]{$4}
+  \bicaption[${2:"waiting for reftex-label call..."$(unless yas/modified-p (reftex-label nil 'dont-insert))}]{${1:caption}}{$1}{Fig.}{$3}
+\end{figure}
