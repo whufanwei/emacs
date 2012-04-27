@@ -15,7 +15,7 @@
  '(org-clock-modeline-total (quote auto))
  '(org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00") ("STYLE_ALL" . "habit"))))
  '(org-table-auto-blank-field nil)
- '(reftex-default-bibliography (quote ("~/temp/zaici")))
+ '(reftex-default-bibliography (quote ("~/下载/DLUT-git/body/reference")))
  '(safe-local-variable-values (quote ((TeX-master . t))))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
@@ -33,9 +33,13 @@
 ;;M-x  eval-buffer   使当前的buffer中的设置语句立刻生效。
 ;;M-x  load-file ~/.emacs  载入.emacs文件，从而使其中的设置生效。
 
-;;设置个人信息
+
 (setq user-full-name "whufanwei")
 (setq user-mail-address "whufanwei@gmail.com")
+(setq track-eol t);; 当光标在行尾上下移动的时候，始终保持在行尾。
+
+(require 'midnight)
+(setq clean-buffer-list-delay-general 3)
 
 (require 're-builder)
 (setq reb-re-syntax 'string)
@@ -71,9 +75,12 @@
 (setq uniquify-after-kill-buffer-p t) ; rename after killing uniquified
 (setq uniquify-ignore-buffers-re "^\\*") ; don't muck with special buffers
 
+(prefer-coding-system 'utf-8)
+
 (require 'saveplace)
 (setq-default save-place t)
 (desktop-save-mode 1)
+
 
 (require 'hl-line)
 (global-hl-line-mode t)
@@ -83,7 +90,6 @@
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
-;; ---------------------auto complete-------------------
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/emacs/extension/ac-dict")
 (ac-config-default)
@@ -101,7 +107,7 @@
                            ac-source-abbrev
                            ac-source-files-in-current-dir    
                            ac-source-filename))   
-(setq ac-auto-start 1) 
+(setq ac-auto-start 2) 
 (global-auto-complete-mode t)
 
 (setq cua-enable-cua-keys nil) ;; only for rectangles
@@ -113,21 +119,19 @@
 (setq default-directory "/home/fan/")
 
 (ido-mode t)
+(global-set-key (kbd "C-x b") 'ido-switch-buffer)
 
 (setq visible-bell t)
 (setq inhibit-startup-message t)
-(fset 'yes-or-no-p 'y-or-n-p)
-(setq kill-ring-max 200)
 
-;; (setq-default indent-tabs-mode nil)
-;; (setq default-tab-width 8)
-;; (setq tab-stop-list ())
+(fset 'yes-or-no-p 'y-or-n-p)
+
+(setq kill-ring-max 200)
 
 (setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\($\\|[ \t]\\)\\)[ \t\n]*")
 (setq sentence-end-double-space nil)
 
 (setq enable-recursive-minibuffers t)
-;;可以递归的使用 minibuffer
 
 (setq-default auto-fill-function 'do-auto-fill)
 (setq default-fill-column 100)
@@ -143,19 +147,19 @@
 
 (setq-default make-backup-files nil)
 
+(setq auto-save-interval 20)
+(setq auto-save-timeout 10)
+
 (setq mouse-yank-at-point t)
 (setq time-stamp-active t)
 (setq time-stamp-warn-inactive t)
 (setq time-stamp-format "%:y-m-d : H:M:S chunyu")
-;; 设置时间戳，标识出最后一次保存文件的时间。
 
 (global-set-key (kbd "M-g") 'goto-line)
-;;设置M-g为goto-line
 
 (global-set-key (kbd "C-c o") 'occur)
 (global-set-key (kbd "C-c f") 'flush-lines)
 (global-set-key (kbd "C-c k") 'keep-lines)
-;; Delete lines not matching regexp
 
 (defun move-line (n)
   "Move the current line up or down by N lines."
@@ -224,7 +228,6 @@ frames with exactly two windows."
     (comment-dwim arg)))
 (global-set-key "\M-;" 'qiang-comment-dwim-line)
 
-;;;删除一行
 (defun zl-delete-line nil
   "delete the whole line"
   (interactive)
@@ -235,7 +238,6 @@ frames with exactly two windows."
 
 (global-set-key (kbd "C-k") 'zl-delete-line);删除一行
 
-;;新建一行，不管光标在哪
 (defun zl-newline nil
   "open new line belowe current line"
   (interactive)
@@ -244,7 +246,6 @@ frames with exactly two windows."
 
 (global-set-key  (kbd "C-z") 'zl-newline)
 
-;;本行上面新建一行，不管光标在哪
 (defun zl-newline-up nil
   "open new line up current line"
   (interactive)
@@ -278,8 +279,8 @@ frames with exactly two windows."
       (skip-chars-backward "^([<>'‘“\"") (setq p1 (point))
       (skip-chars-forward "^)]<>'’”\"") (setq p2 (point))
       (delete-region p1 p2))))
-;; (global-set-key (kbd "C-d") 'delete-enclosed-text);;删除括号内的内容。
-(global-set-key (kbd "C-M-d") 'delete-pair);;删除括号。
+(global-set-key (kbd "C-M-d") 'delete-enclosed-text);;删除括号内的内容。
+;; (global-set-key (kbd "C-M-d") 'delete-pair);;删除括号。
 
 (defun joseph-jump-to-space-forward()
   (interactive)
@@ -299,8 +300,6 @@ frames with exactly two windows."
           )))))
 (global-set-key (kbd "C-o") 'joseph-jump-to-space-forward);;跳到下一处空格
 
-
-
 ;; 搜索光标下字符串
 (defun my-isearch-yank-word-or-char-from-beginning ()
   "Move to beginning of word before yanking word in isearch-mode."
@@ -314,7 +313,6 @@ frames with exactly two windows."
   (substitute-key-definition 'my-isearch-yank-word-or-char-from-beginning
                              'isearch-yank-word-or-char
                              isearch-mode-map))
-
 (add-hook 'isearch-mode-hook
           (lambda ()
             "Activate my customized Isearch word yank command."
@@ -322,10 +320,10 @@ frames with exactly two windows."
                                        'my-isearch-yank-word-or-char-from-beginning
                                        isearch-mode-map)))
 
-
+;; -----------------------------------------------------
 (add-to-list 'load-path "~/emacs/extension/auctex" t)
 (load "auctex.el" nil t t)
-;;(load "preview-latex.el" nil t t)	
+;;(load "preview-latex.el" nil t t)
 (load "tex-site.el" nil t t)
 
 (setq TeX-auto-save t)
@@ -333,8 +331,6 @@ frames with exactly two windows."
 (setq-default TeX-master nil)
 ;;(setq preview-scale-function 1.5)
 (setq LaTeX-math-mode t)
-
-
 
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex) 
 (setq reftex-plug-into-AUCTeX t)
@@ -370,26 +366,26 @@ frames with exactly two windows."
                                      LaTeX-section-title
                                      ;;LaTeX-section-toc
                                      LaTeX-section-section
-                                     LaTeX-section-label))
-                             ))
-
-
+                                     LaTeX-section-label))))
 
 ;; --------------------------
 (add-to-list 'load-path "~/emacs/extension" t)
 
+(require 'highlight-symbol)
+(global-set-key (kbd "<f9> h") 'highlight-symbol-at-point)
+(global-set-key (kbd "<f9> n") 'highlight-symbol-next)
+(global-set-key (kbd "<f9> r") 'highlight-symbol-query-replace)
+(global-set-key (kbd "<f9> p") 'highlight-symbol-prev)
 
 (require 'ac-math)
 (add-to-list 'ac-modes 'latex-mode)   ; make auto-complete aware of {{{latex-mode}}}
 (defun ac-latex-mode-setup ()         ; add ac-sources to default ac-sources
   (setq ac-sources
         (append '(ac-source-math-unicode ac-source-math-latex ac-source-latex-commands)
-                ac-sources))
-  )
+                ac-sources)))
 (add-hook 'LaTeX-mode-hook 'ac-latex-mode-setup)
 
 (require 'autopair)
-;; (autopair-global-mode) ;; to enable in all buffers
 (setq autopair-autowrap t)
 (add-hook 'LaTeX-mode-hook
           #'(lambda ()
@@ -410,8 +406,6 @@ frames with exactly two windows."
 (auto-indent-global-mode)
 
 (require 'goto-chg)
-;; (global-set-key [(control ?,)] 'goto-last-change)
-;; (global-set-key [(control ?,)] 'goto-last-change-reverse)
 (global-set-key [f11] 'goto-last-change)
 
 (require 'dired-details+)
@@ -419,17 +413,11 @@ frames with exactly two windows."
 (require 'fullscreen)
 
 (require 'undo-tree)
-;; (global-undo-tree-mode)
 
 (require 'shell-command)
 (shell-command-completion-mode)
 
 (require 'ediff+)
-
-;; ;; (require 'paredit)
-;; ;; (autoload 'enable-paredit-mode "paredit"
-;; ;;   "Turn on pseudo-structural editing of Lisp code."
-;; ;;   t)
 
 (require 'textmate)
 (tm/initialize)
@@ -445,65 +433,27 @@ frames with exactly two windows."
 ;; (global-set-key (kbd "C-S j") 'jump-char-backward)
 (global-set-key [(shift control j)] 'jump-char-backward)
 
-(add-to-list 'load-path "~/emacs/anything-config") 
-(require 'anything-config)
+(add-to-list 'load-path "~/emacs/helm")
+(require 'helm-config)
+(global-set-key (kbd "C-c h") 'helm-mini)
+(helm-mode 1)
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
 
-(global-set-key (kbd "C-x C-f") 'anything-find-files)
-(global-set-key (kbd "C-x b")
-                (lambda() (interactive)
-                  (anything
-                   :prompt "Switch to: "
-                   :candidate-number-limit 10                 ;; up to 10 of each 
-                   :sources
-                   '( anything-c-source-buffers               ;; buffers 
-                      anything-c-source-recentf               ;; recent files 
-                      anything-c-source-bookmarks             ;; bookmarks
-                      anything-c-source-files-in-current-dir+ ;; current dir
-                      anything-c-source-occur                 ;; Occur
-                      anything-c-source-locate))))            ;; use 'locate'
-
-(global-set-key (kbd "C-c y") 'anything-show-kill-ring)
+(global-set-key (kbd "C-c y") 'helm-show-kill-ring)
+(global-set-key (kbd "<f9> l") 'helm-locate)
+(global-set-key (kbd "<f9> g") 'helm-do-grep)
+(helm-dired-bindings 1)
 
 
-(add-to-list 'load-path "~/emacs/extension/magit") 
+(add-to-list 'load-path "~/emacs/extension/magit")
 (require 'magit)
 (global-set-key [f7] 'magit-status)
-
-(defun whufanwei ()
-  (interactive)
-  (color-theme-install
-   '(whufanwei
-     ((background-color . "#101e2e")
-      (background-mode . light)
-      (border-color . "#1a1a1a")
-      (cursor-color . "#fce94f")
-      (foreground-color . "#eeeeec")
-      (mouse-color . "black"))
-     (fringe ((t (:background "#1a1a1a"))))
-     (mode-line ((t (:foreground "#eeeeec" :background "#555753"))))
-     (region ((t (:background "#0d4519"))))
-     (font-lock-builtin-face ((t (:foreground "#729fcf"))))
-     (font-lock-comment-face ((t (:foreground "#888a85"))))
-     (font-lock-function-name-face ((t (:foreground "#edd400"))))
-     (font-lock-keyword-face ((t (:foreground "#729fcf"))))
-     (font-lock-string-face ((t (:foreground "#ad7fa8"))))
-     (font-lock-type-face ((t (:foreground"#8ae234"))))
-     (font-lock-variable-name-face ((t (:foreground "#eeeeec"))))
-     (minibuffer-prompt ((t (:foreground "#729fcf" :bold t))))
-     (font-lock-warning-face ((t (:foreground "Red" :bold t))))
-     )))
-(provide 'whufanwei)
-
 
 (add-to-list 'load-path "~/emacs/extension/color") 
 (require 'color-theme) 
 (setq color-theme-is-global t)
 (color-theme-initialize)
-;; (whufanwei)
-;; (add-to-list 'load-path "~/emacs/extension/color/sellout-emacs-color-theme") 
-;; (require 'color-theme-solarized)
 (color-theme-tangotango)
-
 
 (add-to-list 'load-path "~/emacs/extension/expand-region")
 (require 'expand-region)
@@ -515,14 +465,11 @@ frames with exactly two windows."
 (yas/global-mode 1) 
 
 
-;; (load "~/emacs/extension/haskell-mode/haskell-site-file")
-;; (add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
-;; ;; (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
-;; ;; (add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
-;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
-;; (setq haskell-program-name "/usr/local/bin/ghci")
-;; ;; (setq haskell-program-name "cabal-dev ghci")
-
+(add-to-list 'load-path "~/emacs/extension/inf-ruby")
+(autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
+(autoload 'inf-ruby-keys "inf-ruby" "" t)
+(eval-after-load 'ruby-mode
+  '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
 
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/lisp"))
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/contrib/lisp"))
@@ -992,29 +939,22 @@ A prefix arg forces clock in of the default task."
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t) (R . t)))
 
-;; (global-set-key (kbd "C-e") 'ecb-activate);;启动Ecb
-;; (global-set-key [f11] 'delete-other-windows);F11 关闭其它窗口
-;; ;;(global-set-key [f12] 'my-fullscreen);F12 全屏
-;; (global-set-key (kbd "M-,") 'backward-page);文件首
-;; (global-set-key (kbd "C-c C-g") 'goto-char) ;;
-;; (define-key python-mode-map (kbd "<f12>") 'python-switch-to-python) 
 
-(add-to-list 'load-path "~/emacs/extension/mew-6.4")
-(autoload 'mew "mew" nil t)
-(autoload 'mew-send "mew" nil t)
-;; Optional setup (Read Mail menu for Emacs 21):
-(if (boundp 'read-mail-command)
-    (setq read-mail-command 'mew))
-;; Optional setup (e.g. C-xm for sending a message):
-(autoload 'mew-user-agent-compose "mew" nil t)
-(if (boundp 'mail-user-agent)
-    (setq mail-user-agent 'mew-user-agent))
-(if (fboundp 'define-mail-user-agent)
-    (define-mail-user-agent
-      'mew-user-agent
-      'mew-user-agent-compose
-      'mew-draft-send-message
-      'mew-draft-kill
-      '))
-
+;; (add-to-list 'load-path "~/emacs/extension/mew-6.4")
+;; (autoload 'mew "mew" nil t)
+;; (autoload 'mew-send "mew" nil t)
+;; ;; Optional setup (Read Mail menu for Emacs 21):
+;; (if (boundp 'read-mail-command)
+;;     (setq read-mail-command 'mew))
+;; ;; Optional setup (e.g. C-xm for sending a message):
+;; (autoload 'mew-user-agent-compose "mew" nil t)
+;; (if (boundp 'mail-user-agent)
+;;     (setq mail-user-agent 'mew-user-agent))
+;; (if (fboundp 'define-mail-user-agent)
+;;     (define-mail-user-agent
+;;       'mew-user-agent
+;;       'mew-user-agent-compose
+;;       'mew-draft-send-message
+;;       'mew-draft-kill
+;;       'mew-send-hook))
 
