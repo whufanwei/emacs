@@ -1,4 +1,4 @@
-;;; css-mode-expansions.el --- CSS-specific expansions for expand-region
+;;; js2-mode-expansions.el --- Additional expansions for js2-mode
 
 ;; Copyright (C) 2011 Magnar Sveen
 
@@ -20,9 +20,10 @@
 
 ;;; Commentary:
 
-;; For now I have only found the need for mark-css-declaration.
+;; Extra expansions specifically for js2-mode, since it has
+;; a semantic parser.
 ;;
-;; Feel free to contribute any other expansions for CSS at
+;; Feel free to contribute any other expansions for JavaScript at
 ;;
 ;;     https://github.com/magnars/expand-region.el
 
@@ -30,23 +31,23 @@
 
 (require 'expand-region-core)
 
-(defun er/mark-css-declaration ()
-  "Marks one CSS declaration, eg. font-weight: bold;"
+(defun js2-mark-parent-statement ()
   (interactive)
-  (search-backward-regexp "[;{] ?" (line-beginning-position))
-  (forward-char)
-  (set-mark (point))
-  (search-forward ";" (line-end-position))
-  (exchange-point-and-mark))
+  (let* ((parent-statement (js2-node-parent-stmt (js2-node-at-point)))
+         (beg (js2-node-abs-pos parent-statement))
+         (end (+ beg (js2-node-len parent-statement))))
+    (goto-char beg)
+    (set-mark end)))
 
-(defun er/add-css-mode-expansions ()
-  "Adds CSS-specific expansions for buffers in css-mode"
+(defun er/add-js2-mode-expansions ()
+  "Adds expansions for buffers in js2-mode"
   (set (make-local-variable 'er/try-expand-list) (append
                                                   er/try-expand-list
-                                                  '(er/mark-css-declaration))))
+                                                  '(js2-mark-parent-statement))))
 
-(add-hook 'css-mode-hook 'er/add-css-mode-expansions)
+(add-hook 'js2-mode-hook 'er/add-js2-mode-expansions)
+;(add-hook 'js3-mode-hook 'er/add-js2-mode-expansions) -- works?
 
-(provide 'css-mode-expansions)
+(provide 'js2-mode-expansions)
 
-;; css-mode-expansions.el ends here
+;; js2-mode-expansions.el ends here

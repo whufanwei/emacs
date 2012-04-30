@@ -150,6 +150,9 @@
 (setq auto-save-interval 20)
 (setq auto-save-timeout 10)
 
+(setq url-using-proxy t)
+(setq url-proxy-services '(("http" . "127.0.0.1:8086")))
+
 (setq mouse-yank-at-point t)
 (setq time-stamp-active t)
 (setq time-stamp-warn-inactive t)
@@ -422,6 +425,8 @@ frames with exactly two windows."
 (require 'textmate)
 (tm/initialize)
 
+(require 'vimgolf)
+
 (require 'thing-edit)
 (global-set-key (kbd "C-c p") 'thing-copy-sexp)
 (global-set-key (kbd "C-c l") 'thing-copy-line)
@@ -457,7 +462,8 @@ frames with exactly two windows."
 
 (add-to-list 'load-path "~/emacs/extension/expand-region")
 (require 'expand-region)
-(global-set-key (kbd "C-@") 'er/expand-region)
+(global-set-key (kbd "C-=") 'er/expand-region)
+
 
 (add-to-list 'load-path "~/emacs/extension/yasnippet")
 (require 'yasnippet)

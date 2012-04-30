@@ -1,9 +1,9 @@
-;;; text-mode-expansions.el --- Expansions for expand-region to be used in text
+;;; org-mode-expansions.el --- Expansions for expand-region to be used in org-mode
 
-;; Copyright (C) 2012 Ivan Andrus
+;; Copyright (C) 2012 Magnar Sveen
 
-;; Author: Ivan Andrus
-;; Based on js-mode-expansions by: Magnar Sveen <magnars@gmail.com>
+;; Author: Magnar Sveen
+;; Based on text-mode-expansions by: Ivan Andrus
 ;; Keywords: marking region
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 
-;; Feel free to contribute any other expansions for normal text at
+;; Feel free to contribute any other expansions for org-mode at
 ;;
 ;;     https://github.com/magnars/expand-region.el
 
@@ -29,34 +29,32 @@
 
 (require 'expand-region-core)
 
-(defun er/mark-text-sentence ()
+(defun er/mark-sentence ()
   "Marks one sentence."
   (interactive)
-  ;; The obvious
-  ;; (backward-sentence 1) (mark-end-of-sentence 1)
-  ;; doesn't work here because it's repeated and the selection keeps
-  ;; growing by sentences, which isn't what's wanted.
+  (forward-char 1)
   (backward-sentence 1)
   (set-mark (point))
   (forward-sentence 1)
   (exchange-point-and-mark))
 
-(defun er/mark-text-paragraph ()
+(defun er/mark-paragraph ()
   "Marks one paragraph."
   (interactive)
   (mark-paragraph)
+  (exchange-point-and-mark)
+  (skip-chars-backward er--space-str)
+  (exchange-point-and-mark)
   (skip-chars-forward er--space-str))
 
-(defun er/add-text-mode-expansions ()
-  "Adds expansions for buffers in text-mode"
+(defun er/add-org-mode-expansions ()
+  "Adds org-specific expansions for buffers in org-mode"
   (set (make-local-variable 'er/try-expand-list) (append
                                                   er/try-expand-list
-                                                  '(er/mark-text-sentence
-                                                    er/mark-text-paragraph
-                                                    mark-page))))
+                                                  '(org-mark-subtree
+                                                    er/mark-sentence
+                                                    er/mark-paragraph))))
 
-(add-hook 'text-mode-hook 'er/add-text-mode-expansions)
+(add-hook 'org-mode-hook 'er/add-org-mode-expansions)
 
-(provide 'text-mode-expansions)
-
-;; text-mode-expansions.el ends here
+(provide 'org-mode-expansions)

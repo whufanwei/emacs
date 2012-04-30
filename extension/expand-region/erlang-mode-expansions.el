@@ -1,9 +1,10 @@
-;;; css-mode-expansions.el --- CSS-specific expansions for expand-region
+;;; erlang-mode-expansions.el --- Erlang-specific expansions for expand-region
 
-;; Copyright (C) 2011 Magnar Sveen
+;; Copyright (C) 2012 Gleb Peregud
 
-;; Author: Magnar Sveen <magnars@gmail.com>
-;; Keywords: marking region
+;; Author: Gleb Peregud
+;; Based on python-mode-expansions by: Ivan Andrus <darthandrus@gmail.com>
+;; Keywords: marking region erlang
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,33 +21,27 @@
 
 ;;; Commentary:
 
-;; For now I have only found the need for mark-css-declaration.
-;;
-;; Feel free to contribute any other expansions for CSS at
+;; Feel free to contribute any other expansions for Erlang at
 ;;
 ;;     https://github.com/magnars/expand-region.el
+
+;;; Bugs:
+
+;; Doesn't handle many Erlang syntax constructs, just the basics
 
 ;;; Code:
 
 (require 'expand-region-core)
 
-(defun er/mark-css-declaration ()
-  "Marks one CSS declaration, eg. font-weight: bold;"
-  (interactive)
-  (search-backward-regexp "[;{] ?" (line-beginning-position))
-  (forward-char)
-  (set-mark (point))
-  (search-forward ";" (line-end-position))
-  (exchange-point-and-mark))
-
-(defun er/add-css-mode-expansions ()
-  "Adds CSS-specific expansions for buffers in css-mode"
+(defun er/add-erlang-mode-expansions ()
+  "Adds Erlang-specific expansions for buffers in erlang-mode"
   (set (make-local-variable 'er/try-expand-list) (append
                                                   er/try-expand-list
-                                                  '(er/mark-css-declaration))))
+                                                  '(erlang-mark-function
+                                                    erlang-mark-clause))))
 
-(add-hook 'css-mode-hook 'er/add-css-mode-expansions)
+(add-hook 'erlang-mode-hook 'er/add-erlang-mode-expansions)
 
-(provide 'css-mode-expansions)
+(provide 'erlang-mode-expansions)
 
-;; css-mode-expansions.el ends here
+;; erlang-mode-expansions.el ends here
