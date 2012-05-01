@@ -425,6 +425,9 @@ frames with exactly two windows."
 (require 'textmate)
 (tm/initialize)
 
+(require 'rainbow-delimiters)
+(global-rainbow-delimiters-mode)
+
 (require 'vimgolf)
 
 (require 'thing-edit)
