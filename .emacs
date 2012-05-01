@@ -150,9 +150,9 @@
 (setq auto-save-interval 20)
 (setq auto-save-timeout 10)
 
-(setq url-using-proxy t)
-(setq url-proxy-services '(("http" . "127.0.0.1:8086")))
-
+;; (setq url-using-proxy t)
+;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
+t
 (setq mouse-yank-at-point t)
 (setq time-stamp-active t)
 (setq time-stamp-warn-inactive t)
