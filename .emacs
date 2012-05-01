@@ -428,7 +428,7 @@ frames with exactly two windows."
 (require 'rainbow-delimiters)
 (global-rainbow-delimiters-mode)
 
-(require 'vimgolf)
+;; (require 'vimgolf)
 
 (require 'thing-edit)
 (global-set-key (kbd "C-c p") 'thing-copy-sexp)
