@@ -39,7 +39,21 @@
 (setq track-eol t);; 当光标在行尾上下移动的时候，始终保持在行尾。
 
 (require 'midnight)
-(setq clean-buffer-list-delay-general 3)
+;; clean buffers open longer than 1 days
+(setq clean-buffer-list-delay-general 1)
+;; special buffers are cleaned every 5 hours
+(setq clean-buffer-list-delay-special (* 5 3600))
+;; run the midnight hook every 2 hours
+(setq midnight-period (* 2 60 60))
+(setq clean-buffer-list-kill-regexps
+      '("^.*$"))
+(defvar clean-buffer-list-kill-never-buffer-names-init
+  clean-buffer-list-kill-never-buffer-names
+  "Init value for clean-buffer-list-kill-never-buffer-names")
+(setq clean-buffer-list-kill-never-buffer-names
+      (append
+       '("*Messages*" "*scratch*" "*w3m*" "*w3m-cache*")
+       clean-buffer-list-kill-never-buffer-names-init))
 
 (require 're-builder)
 (setq reb-re-syntax 'string)
@@ -57,6 +71,7 @@
 (global-set-key "\C-xj" 'align-regexp)
 
 (global-visual-line-mode 1)
+(global-auto-revert-mode 1)
 
 ;; (require 'linum);;行号
 ;; (global-linum-mode t)
@@ -80,7 +95,6 @@
 (require 'saveplace)
 (setq-default save-place t)
 (desktop-save-mode 1)
-
 
 (require 'hl-line)
 (global-hl-line-mode t)
@@ -154,9 +168,9 @@
 ;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
 
 (setq mouse-yank-at-point t)
-(setq time-stamp-active t)
-(setq time-stamp-warn-inactive t)
-(setq time-stamp-format "%:y-m-d : H:M:S chunyu")
+;; (setq time-stamp-active t)
+;; (setq time-stamp-warn-inactive t)
+;; (setq time-stamp-format "%:y-m-d : H:M:S chunyu")
 
 (global-set-key (kbd "M-g") 'goto-line)
 
