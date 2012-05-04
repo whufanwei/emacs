@@ -190,6 +190,82 @@
 (global-set-key (kbd "M-<up>") 'move-line-up)
 (global-set-key (kbd "M-<down>") 'move-line-down)
 
+
+;; 高级复制
+
+(defun get-point (symbol &optional arg)
+  "get the point"
+  (funcall symbol arg)
+  (point)
+  )
+
+(defun copy-thing (begin-of-thing end-of-thing &optional arg)
+  "copy thing between beg & end into kill ring"
+  (save-excursion
+    (let ((beg (get-point begin-of-thing 1))
+          (end (get-point end-of-thing arg)))
+      (copy-region-as-kill beg end)))
+  )
+
+(defun paste-to-mark(&optional arg)
+  "Paste things to mark, or to the prompt in shell-mode"
+  (let ((pasteMe 
+         (lambda()
+           (if (string= "shell-mode" major-mode)
+               (progn (comint-next-prompt 25535) (yank))
+             (progn (goto-char (mark)) (yank) )))))
+    (if arg
+        (if (= arg 1)
+            nil
+          (funcall pasteMe))
+      (funcall pasteMe))
+    ))
+
+(defun copy-word (&optional arg)
+  "Copy words at point into kill-ring"
+  (interactive "P")
+  (copy-thing 'backward-word 'forward-word arg)
+  ;;(paste-to-mark arg)
+  )
+(defun copy-line (&optional arg)
+  "Save current line into Kill-Ring without mark the line "
+  (interactive "P")
+  (copy-thing 'beginning-of-line 'end-of-line arg)
+  ;; (paste-to-mark arg)
+  )
+
+(defun copy-paragraph (&optional arg)
+  "Copy paragraphes at point"
+  (interactive "P")
+  (copy-thing 'backward-paragraph 'forward-paragraph arg)
+  ;; (paste-to-mark arg)
+  )
+
+(defun beginning-of-parenthesis(&optional arg)
+  "  "
+  (re-search-backward "[[<(?\"]" (line-beginning-position) 3 1)
+  (if (looking-at "[[<(?\"]")  (goto-char (+ (point) 1)) )
+  )
+(defun end-of-parenthesis(&optional arg)
+  " "
+  (re-search-forward "[]>)?\"]" (line-end-position) 3 arg)
+  (if (looking-back "[]>)?\"]") (goto-char (- (point) 1)) )
+  )
+
+(defun thing-copy-parenthesis-to-mark(&optional arg)
+  " Try to copy a parenthesis and paste it to the mark
+     When used in shell-mode, it will paste parenthesis on shell prompt by default "
+  (interactive "P")
+  (copy-thing 'beginning-of-parenthesis 'end-of-parenthesis arg)
+  ;; (paste-to-mark arg)
+  )
+
+(global-set-key (kbd "C-c p")         (quote thing-copy-parenthesis-to-mark))
+(global-set-key (kbd "C-c w")         (quote copy-word))
+(global-set-key (kbd "C-c l")         (quote copy-line))
+
+;; 窗口切换
+
 (defun toggle-window-split ()
   "Vertical split shows more of each line, horizontal split shows
 more lines. This code toggles between them. It only works for
@@ -197,26 +273,26 @@ frames with exactly two windows."
   (interactive)
   (if (= (count-windows) 2)
       (let* ((this-win-buffer (window-buffer))
-             (next-win-buffer (window-buffer (next-window)))
-             (this-win-edges (window-edges (selected-window)))
-             (next-win-edges (window-edges (next-window)))
-             (this-win-2nd (not (and (<= (car this-win-edges)
-                                         (car next-win-edges))
-                                     (<= (cadr this-win-edges)
-                                         (cadr next-win-edges)))))
-             (splitter
-              (if (= (car this-win-edges)
-                     (car (window-edges (next-window))))
-                  'split-window-horizontally
-                'split-window-vertically)))
-        (delete-other-windows)
-        (let ((first-win (selected-window)))
-          (funcall splitter)
-          (if this-win-2nd (other-window 1))
-          (set-window-buffer (selected-window) this-win-buffer)
-          (set-window-buffer (next-window) next-win-buffer)
-          (select-window first-win)
-          (if this-win-2nd (other-window 1))))))
+	     (next-win-buffer (window-buffer (next-window)))
+	     (this-win-edges (window-edges (selected-window)))
+	     (next-win-edges (window-edges (next-window)))
+	     (this-win-2nd (not (and (<= (car this-win-edges)
+					 (car next-win-edges))
+				     (<= (cadr this-win-edges)
+					 (cadr next-win-edges)))))
+	     (splitter
+	      (if (= (car this-win-edges)
+		     (car (window-edges (next-window))))
+		  'split-window-horizontally
+		'split-window-vertically)))
+	(delete-other-windows)
+	(let ((first-win (selected-window)))
+	  (funcall splitter)
+	  (if this-win-2nd (other-window 1))
+	  (set-window-buffer (selected-window) this-win-buffer)
+	  (set-window-buffer (next-window) next-win-buffer)
+	  (select-window first-win)
+	  (if this-win-2nd (other-window 1))))))
 
 (global-set-key [(control x) (t)] 'toggle-window-split)  
 
@@ -288,19 +364,19 @@ frames with exactly two windows."
 (defun joseph-jump-to-space-forward()
   (interactive)
   (let ((old-pos (point))
-        m-end m-begin
-        )
+	m-end m-begin
+	)
     (when (re-search-forward "[ \t]+"  nil t)
       (setq m-begin (match-beginning 0))
       (setq m-end (match-end 0))
       (goto-char m-begin)
       (if (equal old-pos m-end)
-          (progn
-            (re-search-forward "[ \t]+"  nil t)
-            (goto-char (match-beginning 0)))
-        (if (equal m-begin old-pos)
-            (goto-char m-end)
-          )))))
+	  (progn
+	    (re-search-forward "[ \t]+"  nil t)
+	    (goto-char (match-beginning 0)))
+	(if (equal m-begin old-pos)
+	    (goto-char m-end)
+	  )))))
 (global-set-key (kbd "C-o") 'joseph-jump-to-space-forward);;跳到下一处空格
 
 ;; 搜索光标下字符串
@@ -314,14 +390,14 @@ frames with exactly two windows."
   (isearch-yank-word-or-char)
   ;; Revert to 'isearch-yank-word-or-char for subsequent calls
   (substitute-key-definition 'my-isearch-yank-word-or-char-from-beginning
-                             'isearch-yank-word-or-char
-                             isearch-mode-map))
+			     'isearch-yank-word-or-char
+			     isearch-mode-map))
 (add-hook 'isearch-mode-hook
-          (lambda ()
-            "Activate my customized Isearch word yank command."
-            (substitute-key-definition 'isearch-yank-word-or-char
-                                       'my-isearch-yank-word-or-char-from-beginning
-                                       isearch-mode-map)))
+	  (lambda ()
+	    "Activate my customized Isearch word yank command."
+	    (substitute-key-definition 'isearch-yank-word-or-char
+				       'my-isearch-yank-word-or-char-from-beginning
+				       isearch-mode-map)))
 
 ;; -----------------------------------------------------
 (add-to-list 'load-path "~/emacs/extension/auctex" t)
@@ -349,27 +425,27 @@ frames with exactly two windows."
 
 ;;;;;;;;;LaTex-mode settings;;;;;
 (add-hook 'LaTeX-mode-hook (lambda ()
-                             (LaTeX-math-mode 1)
-                             (setq TeX-show-compilation nil)   ;;NOT display compilation 
-                             (setq TeX-global-PDF-mode t       ;;PDF mode enable, not plain
-                                   TeX-engine 'xetex)  ;;use xelatex default
-                             (setq TeX-clean-confirm nil)
-                             (imenu-add-menubar-index)
-                             (setq TeX-save-query nil)
-                             (setq TeX-show-compilation t)
-                             (setq TeX-electric-escape t)      ;; 按 \ 后光标跳到mini-buffer
-                             (setq TeX-view-program-list '(("Evince" "evince %o"))) ;;重新定义
-                             (setq TeX-view-program-selection '((output-pdf "Evince")))
-                             (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode) -shell-escape%' %t" TeX-run-TeX nil t))
-                             (setq TeX-command-default "XeLaTeX")
-                             ;;定义latex-mode下的快捷键
-                             (define-key LaTeX-mode-map (kbd "C-c C-p") 'reftex-parse-all)
-                             (setq LaTeX-section-hook
-                                   '(LaTeX-section-heading
-                                     LaTeX-section-title
-                                     ;;LaTeX-section-toc
-                                     LaTeX-section-section
-                                     LaTeX-section-label))))
+			     (LaTeX-math-mode 1)
+			     (setq TeX-show-compilation nil)   ;;NOT display compilation 
+			     (setq TeX-global-PDF-mode t       ;;PDF mode enable, not plain
+				   TeX-engine 'xetex)  ;;use xelatex default
+			     (setq TeX-clean-confirm nil)
+			     (imenu-add-menubar-index)
+			     (setq TeX-save-query nil)
+			     (setq TeX-show-compilation t)
+			     (setq TeX-electric-escape t)      ;; 按 \ 后光标跳到mini-buffer
+			     (setq TeX-view-program-list '(("Evince" "evince %o"))) ;;重新定义
+			     (setq TeX-view-program-selection '((output-pdf "Evince")))
+			     (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode) -shell-escape%' %t" TeX-run-TeX nil t))
+			     (setq TeX-command-default "XeLaTeX")
+			     ;;定义latex-mode下的快捷键
+			     (define-key LaTeX-mode-map (kbd "C-c C-p") 'reftex-parse-all)
+			     (setq LaTeX-section-hook
+				   '(LaTeX-section-heading
+				     LaTeX-section-title
+				     ;;LaTeX-section-toc
+				     LaTeX-section-section
+				     LaTeX-section-label))))
 
 ;; --------------------------
 (add-to-list 'load-path "~/emacs/extension" t)
@@ -384,16 +460,16 @@ frames with exactly two windows."
 (add-to-list 'ac-modes 'latex-mode)   ; make auto-complete aware of {{{latex-mode}}}
 (defun ac-latex-mode-setup ()         ; add ac-sources to default ac-sources
   (setq ac-sources
-        (append '(ac-source-math-unicode ac-source-math-latex ac-source-latex-commands)
-                ac-sources)))
+	(append '(ac-source-math-unicode ac-source-math-latex ac-source-latex-commands)
+		ac-sources)))
 (add-hook 'LaTeX-mode-hook 'ac-latex-mode-setup)
 
 (require 'autopair)
 (setq autopair-autowrap t)
 (add-hook 'LaTeX-mode-hook
-          #'(lambda ()
-              (push '(?< . ?>)
-                    (getf autopair-extra-pairs :code))))
+	  #'(lambda ()
+	      (push '(?< . ?>)
+		    (getf autopair-extra-pairs :code))))
 
 (require 'cal-china-x)
 (setq mark-holidays-in-calendar t)
@@ -427,14 +503,6 @@ frames with exactly two windows."
 
 (require 'rainbow-delimiters)
 (global-rainbow-delimiters-mode)
-
-;; (require 'vimgolf)
-
-(require 'thing-edit)
-(global-set-key (kbd "C-c p") 'thing-copy-sexp)
-(global-set-key (kbd "C-c l") 'thing-copy-line)
-(global-set-key (kbd "C-c w") 'thing-copy-word)
-(global-set-key (kbd "C-c s") 'thing-copy-sentence)
 
 (require 'jump-char)
 (global-set-key (kbd "C-j") 'jump-char-forward)
@@ -496,11 +564,11 @@ frames with exactly two windows."
   (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
 
 (add-hook 'org-mode-hook
-          (lambda ()
-            (make-variable-buffer-local 'yas/trigger-key)
-            (setq yas/trigger-key [tab])
-            (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
-            (define-key yas/keymap [tab] 'yas/next-field)))
+	  (lambda ()
+	    (make-variable-buffer-local 'yas/trigger-key)
+	    (setq yas/trigger-key [tab])
+	    (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+	    (define-key yas/keymap [tab] 'yas/next-field)))
 
 
 (require 'org-crypt)
@@ -527,57 +595,57 @@ frames with exactly two windows."
 (define-key org-mode-map (kbd "C-k") 'zl-delete-line);删除一行
 ;; (define-key org-mode-map (kbd "C-,") 'goto-last-change);删除一行
 (add-hook 'org-mode-hook
-          (lambda ()
-            (define-key org-mode-map "\C-a" 'move-beginning-of-line)
-            (define-key org-mode-map "\C-e" 'move-end-of-line)))
+	  (lambda ()
+	    (define-key org-mode-map "\C-a" 'move-beginning-of-line)
+	    (define-key org-mode-map "\C-e" 'move-end-of-line)))
 
 
 
 (setq org-todo-keywords
       (quote ((sequence "TODO(t)" "NEXT(n)" "STARTED(s)" "|" "DONE(d!/!)")
-              (sequence "WAITING(w@/@)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE"))))
+	      (sequence "WAITING(w@/@)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE"))))
 
 (setq org-todo-keyword-faces
       (quote (("TODO" :foreground "red" :weight bold)
-              ("NEXT" :foreground "blue" :weight bold)
-              ("STARTED" :foreground "blue" :weight bold)
-              ("DONE" :foreground "forest green" :weight bold)
-              ("WAITING" :foreground "orange" :weight bold)
-              ("HOLD" :foreground "magenta" :weight bold)
-              ("CANCELLED" :foreground "forest green" :weight bold)
-              ("PHONE" :foreground "forest green" :weight bold))))
+	      ("NEXT" :foreground "blue" :weight bold)
+	      ("STARTED" :foreground "blue" :weight bold)
+	      ("DONE" :foreground "forest green" :weight bold)
+	      ("WAITING" :foreground "orange" :weight bold)
+	      ("HOLD" :foreground "magenta" :weight bold)
+	      ("CANCELLED" :foreground "forest green" :weight bold)
+	      ("PHONE" :foreground "forest green" :weight bold))))
 
 (setq org-tag-alist (quote ((:startgroup)
-                            ("@office" . ?o)
-                            ("@home" . ?H)
-                            (:endgroup)
-                            ("PHONE" . ?p)
-                            ("WAITING" . ?w)
-                            ("HOLD" . ?h)
-                            ("PERSONAL" . ?P)
-                            ("crypt" . ?e)
-                            ("WORK" . ?W)
-                            ("NOTE" . ?n)
-                            ("CANCELLED" . ?c)
-                            )))
+			    ("@office" . ?o)
+			    ("@home" . ?H)
+			    (:endgroup)
+			    ("PHONE" . ?p)
+			    ("WAITING" . ?w)
+			    ("HOLD" . ?h)
+			    ("PERSONAL" . ?P)
+			    ("crypt" . ?e)
+			    ("WORK" . ?W)
+			    ("NOTE" . ?n)
+			    ("CANCELLED" . ?c)
+			    )))
 
 (setq org-capture-templates
       (quote (("t" "todo" entry (file "~/git/org/refile.org")
-               "* TODO %?\n%U\n%a\n  %i" :clock-in t :clock-resume t)
-              ("n" "note" entry (file "~/git/org/refile.org")
-               "* %? :NOTE:\n%U\n%a\n  %i" :clock-in t :clock-resume t)
-              ("j" "Journal" entry (file+datetree "~/git/org/diary.org")
-               "* %?\n%U\n  %i" :clock-in t :clock-resume t)
-              ("w" "org-protocol" entry (file "~/git/org/refile.org")
-               "* TODO Review %c\n%U\n  %i" :immediate-finish t)
-              ("p" "Phone call" entry (file "~/git/org/refile.org")
-               "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
-              ("h" "Habit" entry (file "~/git/org/refile.org")
-               "* NEXT %?\n%U\n%a\nSCHEDULED: %t .+1d/3d\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n  %i"))))
+	       "* TODO %?\n%U\n%a\n  %i" :clock-in t :clock-resume t)
+	      ("n" "note" entry (file "~/git/org/refile.org")
+	       "* %? :NOTE:\n%U\n%a\n  %i" :clock-in t :clock-resume t)
+	      ("j" "Journal" entry (file+datetree "~/git/org/diary.org")
+	       "* %?\n%U\n  %i" :clock-in t :clock-resume t)
+	      ("w" "org-protocol" entry (file "~/git/org/refile.org")
+	       "* TODO Review %c\n%U\n  %i" :immediate-finish t)
+	      ("p" "Phone call" entry (file "~/git/org/refile.org")
+	       "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
+	      ("h" "Habit" entry (file "~/git/org/refile.org")
+	       "* NEXT %?\n%U\n%a\nSCHEDULED: %t .+1d/3d\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n  %i"))))
 
 
 (setq org-refile-targets (quote ((nil :maxlevel . 9)
-                                 (org-agenda-files :maxlevel . 9))))
+				 (org-agenda-files :maxlevel . 9))))
 (setq org-refile-use-outline-path nil)
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-allow-creating-parent-nodes (quote confirm))
@@ -595,55 +663,55 @@ frames with exactly two windows."
 (defun bh/is-project-p ()
   "Any task with a todo keyword subtask"
   (let ((has-subtask)
-        (subtree-end (save-excursion (org-end-of-subtree t)))
-        (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+	(subtree-end (save-excursion (org-end-of-subtree t)))
+	(is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
     (save-excursion
       (forward-line 1)
       (while (and (not has-subtask)
-                  (< (point) subtree-end)
-                  (re-search-forward "^\*+ " subtree-end t))
-        (when (member (org-get-todo-state) org-todo-keywords-1)
-          (setq has-subtask t))))
+		  (< (point) subtree-end)
+		  (re-search-forward "^\*+ " subtree-end t))
+	(when (member (org-get-todo-state) org-todo-keywords-1)
+	  (setq has-subtask t))))
     (and is-a-task has-subtask)))
 
 (defun bh/is-project-subtree-p ()
   "Any task with a todo keyword that is in a project subtree.
 Callers of this function already widen the buffer view."
   (let ((task (save-excursion (org-back-to-heading 'invisible-ok)
-                              (point))))
+			      (point))))
     (save-excursion
       (bh/find-project-task)
       (if (equal (point) task)
-          nil
-        t))))
+	  nil
+	t))))
 
 (defun bh/is-subproject-p ()
   "Any task which is a subtask of another project"
   (let ((is-subproject)
-        (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+	(is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
     (save-excursion
       (while (and (not is-subproject) (org-up-heading-safe))
-        (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-          (setq is-subproject t))))
+	(when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+	  (setq is-subproject t))))
     (and is-a-task is-subproject)))
 
 (defun bh/skip-non-stuck-projects ()
   "Skip trees that are not stuck projects"
   (let* ((next-headline (save-excursion (or (outline-next-heading) (point-max))))
-         (subtree-end (save-excursion (org-end-of-subtree t)))
-         (has-next (save-excursion
-                     (forward-line 1)
-                     (and (< (point) subtree-end)
-                          (re-search-forward "^\\*+ \\(NEXT\\|STARTED\\) " subtree-end t)))))
+	 (subtree-end (save-excursion (org-end-of-subtree t)))
+	 (has-next (save-excursion
+		     (forward-line 1)
+		     (and (< (point) subtree-end)
+			  (re-search-forward "^\\*+ \\(NEXT\\|STARTED\\) " subtree-end t)))))
     (if (and (bh/is-project-p) (not has-next))
-        nil ; a stuck project, has subtasks but no next task
+	nil ; a stuck project, has subtasks but no next task
       next-headline)))
 
 (defun bh/skip-non-projects ()
   "Skip trees that are not projects"
   (let ((subtree-end (save-excursion (org-end-of-subtree t))))
     (if (bh/is-project-p)
-        nil
+	nil
       subtree-end)))
 
 (defun bh/skip-project-trees-and-habits ()
@@ -664,22 +732,22 @@ When not restricted, skip project and sub-project tasks, habits, and project rel
   (save-restriction
     (widen)
     (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-           (next-headline (save-excursion (or (outline-next-heading) (point-max))))
-           (limit-to-project (marker-buffer org-agenda-restrict-begin)))
+	   (next-headline (save-excursion (or (outline-next-heading) (point-max))))
+	   (limit-to-project (marker-buffer org-agenda-restrict-begin)))
       (cond
        ((bh/is-project-p)
-        next-headline)
+	next-headline)
        ((org-is-habit-p)
-        subtree-end)
+	subtree-end)
        ((and (not limit-to-project)
-             (bh/is-project-subtree-p))
-        subtree-end)
+	     (bh/is-project-subtree-p))
+	subtree-end)
        ((and limit-to-project
-             (bh/is-project-subtree-p)
-             (member (org-get-todo-state) (list "NEXT")))
-        subtree-end)
+	     (bh/is-project-subtree-p)
+	     (member (org-get-todo-state) (list "NEXT")))
+	subtree-end)
        (t
-        nil)))))
+	nil)))))
 
 (defun bh/skip-projects-and-habits ()
   "Skip trees that are projects and tasks that are habits"
@@ -696,7 +764,7 @@ When not restricted, skip project and sub-project tasks, habits, and project rel
   "Skip trees that are not projects"
   (let ((next-headline (save-excursion (outline-next-heading))))
     (if (bh/is-subproject-p)
-        nil
+	nil
       next-headline)))
 
 
@@ -706,89 +774,89 @@ When not restricted, skip project and sub-project tasks, habits, and project rel
 ;; Custom agenda command definitions
 (setq org-agenda-custom-commands
       (quote (("N" "Notes" tags "NOTE"
-               ((org-agenda-overriding-header "Notes")
-                (org-tags-match-list-sublevels t)))
-              ("h" "Habits" tags-todo "STYLE=\"habit\""
-               ((org-agenda-overriding-header "Habits")
-                (org-agenda-sorting-strategy
-                 '(todo-state-down effort-up category-keep))))
-              (" " "Agenda"
-               ((agenda "" nil)
-                (tags "REFILE"
-                      ((org-agenda-overriding-header "Tasks to Refile")
-                       (org-tags-match-list-sublevels nil)))
-                (tags-todo "-CANCELLED/!"
-                           ((org-agenda-overriding-header "Stuck Projects")
-                            (org-tags-match-list-sublevels 'indented)
-                            (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
-                (tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
-                           ((org-agenda-overriding-header "Next Tasks")
-                            (org-agenda-skip-function 'bh/skip-projects-and-habits)
-                            (org-agenda-todo-ignore-scheduled t)
-                            (org-agenda-todo-ignore-deadlines t)
-                            (org-tags-match-list-sublevels t)
-                            (org-agenda-sorting-strategy
-                             '(todo-state-down effort-up category-keep))))
-                (tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
-                           ((org-agenda-overriding-header "Tasks")
-                            (org-agenda-skip-function 'bh/skip-project-tasks-maybe)
-                            (org-agenda-todo-ignore-scheduled t)
-                            (org-agenda-todo-ignore-deadlines t)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (tags-todo "-CANCELLED/!"
-                           ((org-agenda-overriding-header "Projects")
-                            (org-agenda-skip-function 'bh/skip-non-projects)
-                            (org-tags-match-list-sublevels 'indented)
-                            (org-agenda-todo-ignore-scheduled 'future)
-                            (org-agenda-todo-ignore-deadlines 'future)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (todo "WAITING|HOLD"
-                      ((org-agenda-overriding-header "Waiting and Postponed tasks")
-                       (org-agenda-skip-function 'bh/skip-projects-and-habits)
-                       (org-agenda-todo-ignore-scheduled t)
-                       (org-agenda-todo-ignore-deadlines t)))
-                (tags "-REFILE/"
-                      ((org-agenda-overriding-header "Tasks to Archive")
-                       (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))
-               nil)
-              ("r" "Tasks to Refile" tags "REFILE"
-               ((org-agenda-overriding-header "Tasks to Refile")
-                (org-tags-match-list-sublevels nil)))
-              ("#" "Stuck Projects" tags-todo "-CANCELLED/!"
-               ((org-agenda-overriding-header "Stuck Projects")
-                (org-tags-match-list-sublevels 'indented)
-                (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
-              ("n" "Next Tasks" tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
-               ((org-agenda-overriding-header "Next Tasks")
-                (org-agenda-skip-function 'bh/skip-projects-and-habits)
-                (org-agenda-todo-ignore-scheduled t)
-                (org-agenda-todo-ignore-deadlines t)
-                (org-tags-match-list-sublevels t)
-                (org-agenda-sorting-strategy
-                 '(todo-state-down effort-up category-keep))))
-              ("R" "Tasks" tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
-               ((org-agenda-overriding-header "Tasks")
-                (org-agenda-skip-function 'bh/skip-project-tasks-maybe)
-                (org-agenda-sorting-strategy
-                 '(category-keep))))
-              ("p" "Projects" tags-todo "-CANCELLED/!"
-               ((org-agenda-overriding-header "Projects")
-                (org-agenda-skip-function 'bh/skip-non-projects)
-                (org-tags-match-list-sublevels 'indented)
-                (org-agenda-todo-ignore-scheduled 'future)
-                (org-agenda-todo-ignore-deadlines 'future)
-                (org-agenda-sorting-strategy
-                 '(category-keep))))
-              ("w" "Waiting Tasks" todo "WAITING|HOLD"
-               ((org-agenda-overriding-header "Waiting and Postponed tasks"))
-               (org-agenda-skip-function 'bh/skip-projects-and-habits)
-               (org-agenda-todo-ignore-scheduled 'future)
-               (org-agenda-todo-ignore-deadlines 'future))
-              ("A" "Tasks to Archive" tags "-REFILE/"
-               ((org-agenda-overriding-header "Tasks to Archive")
-                (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
+	       ((org-agenda-overriding-header "Notes")
+		(org-tags-match-list-sublevels t)))
+	      ("h" "Habits" tags-todo "STYLE=\"habit\""
+	       ((org-agenda-overriding-header "Habits")
+		(org-agenda-sorting-strategy
+		 '(todo-state-down effort-up category-keep))))
+	      (" " "Agenda"
+	       ((agenda "" nil)
+		(tags "REFILE"
+		      ((org-agenda-overriding-header "Tasks to Refile")
+		       (org-tags-match-list-sublevels nil)))
+		(tags-todo "-CANCELLED/!"
+			   ((org-agenda-overriding-header "Stuck Projects")
+			    (org-tags-match-list-sublevels 'indented)
+			    (org-agenda-skip-function 'bh/skip-non-stuck-projects)))
+		(tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
+			   ((org-agenda-overriding-header "Next Tasks")
+			    (org-agenda-skip-function 'bh/skip-projects-and-habits)
+			    (org-agenda-todo-ignore-scheduled t)
+			    (org-agenda-todo-ignore-deadlines t)
+			    (org-tags-match-list-sublevels t)
+			    (org-agenda-sorting-strategy
+			     '(todo-state-down effort-up category-keep))))
+		(tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
+			   ((org-agenda-overriding-header "Tasks")
+			    (org-agenda-skip-function 'bh/skip-project-tasks-maybe)
+			    (org-agenda-todo-ignore-scheduled t)
+			    (org-agenda-todo-ignore-deadlines t)
+			    (org-agenda-sorting-strategy
+			     '(category-keep))))
+		(tags-todo "-CANCELLED/!"
+			   ((org-agenda-overriding-header "Projects")
+			    (org-agenda-skip-function 'bh/skip-non-projects)
+			    (org-tags-match-list-sublevels 'indented)
+			    (org-agenda-todo-ignore-scheduled 'future)
+			    (org-agenda-todo-ignore-deadlines 'future)
+			    (org-agenda-sorting-strategy
+			     '(category-keep))))
+		(todo "WAITING|HOLD"
+		      ((org-agenda-overriding-header "Waiting and Postponed tasks")
+		       (org-agenda-skip-function 'bh/skip-projects-and-habits)
+		       (org-agenda-todo-ignore-scheduled t)
+		       (org-agenda-todo-ignore-deadlines t)))
+		(tags "-REFILE/"
+		      ((org-agenda-overriding-header "Tasks to Archive")
+		       (org-agenda-skip-function 'bh/skip-non-archivable-tasks))))
+	       nil)
+	      ("r" "Tasks to Refile" tags "REFILE"
+	       ((org-agenda-overriding-header "Tasks to Refile")
+		(org-tags-match-list-sublevels nil)))
+	      ("#" "Stuck Projects" tags-todo "-CANCELLED/!"
+	       ((org-agenda-overriding-header "Stuck Projects")
+		(org-tags-match-list-sublevels 'indented)
+		(org-agenda-skip-function 'bh/skip-non-stuck-projects)))
+	      ("n" "Next Tasks" tags-todo "-WAITING-CANCELLED/!NEXT|STARTED"
+	       ((org-agenda-overriding-header "Next Tasks")
+		(org-agenda-skip-function 'bh/skip-projects-and-habits)
+		(org-agenda-todo-ignore-scheduled t)
+		(org-agenda-todo-ignore-deadlines t)
+		(org-tags-match-list-sublevels t)
+		(org-agenda-sorting-strategy
+		 '(todo-state-down effort-up category-keep))))
+	      ("R" "Tasks" tags-todo "-REFILE-CANCELLED/!-NEXT-STARTED-WAITING"
+	       ((org-agenda-overriding-header "Tasks")
+		(org-agenda-skip-function 'bh/skip-project-tasks-maybe)
+		(org-agenda-sorting-strategy
+		 '(category-keep))))
+	      ("p" "Projects" tags-todo "-CANCELLED/!"
+	       ((org-agenda-overriding-header "Projects")
+		(org-agenda-skip-function 'bh/skip-non-projects)
+		(org-tags-match-list-sublevels 'indented)
+		(org-agenda-todo-ignore-scheduled 'future)
+		(org-agenda-todo-ignore-deadlines 'future)
+		(org-agenda-sorting-strategy
+		 '(category-keep))))
+	      ("w" "Waiting Tasks" todo "WAITING|HOLD"
+	       ((org-agenda-overriding-header "Waiting and Postponed tasks"))
+	       (org-agenda-skip-function 'bh/skip-projects-and-habits)
+	       (org-agenda-todo-ignore-scheduled 'future)
+	       (org-agenda-todo-ignore-deadlines 'future))
+	      ("A" "Tasks to Archive" tags "-REFILE/"
+	       ((org-agenda-overriding-header "Tasks to Archive")
+		(org-agenda-skip-function 'bh/skip-non-archivable-tasks))))))
 
 ;; Resume clocking tasks when emacs is restarted
 (org-clock-persistence-insinuate)
@@ -819,7 +887,7 @@ When not restricted, skip project and sub-project tasks, habits, and project rel
   "Switch task from TODO or NEXT to STARTED when clocking in.
 Skips capture tasks."
   (if (and (member (org-get-todo-state) (list "TODO" "NEXT"))
-           (not (and (boundp 'org-capture-mode) org-capture-mode)))
+	   (not (and (boundp 'org-capture-mode) org-capture-mode)))
       "STARTED"))
 
 (defun bh/find-project-task ()
@@ -827,7 +895,7 @@ Skips capture tasks."
   (let ((parent-task (save-excursion (org-back-to-heading) (point))))
     (while (org-up-heading-safe)
       (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-        (setq parent-task (point))))
+	(setq parent-task (point))))
     (goto-char parent-task)
     parent-task))
 
@@ -842,10 +910,10 @@ as the default task."
       ;; We're in the agenda
       ;;
       (let* ((marker (org-get-at-bol 'org-hd-marker))
-             (tags (org-with-point-at marker (org-get-tags-at))))
-        (if (and (eq arg 4) tags)
-            (org-agenda-clock-in '(16))
-          (bh/clock-in-organization-task-as-default)))
+	     (tags (org-with-point-at marker (org-get-tags-at))))
+	(if (and (eq arg 4) tags)
+	    (org-agenda-clock-in '(16))
+	  (bh/clock-in-organization-task-as-default)))
     ;;
     ;; We are not in the agenda
     ;;
@@ -853,8 +921,8 @@ as the default task."
       (widen)
       ;; Find the tags on the current task
       (if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
-          (org-clock-in '(16))
-        (bh/clock-in-organization-task-as-default)))))
+	  (org-clock-in '(16))
+	(bh/clock-in-organization-task-as-default)))))
 
 (defun bh/punch-out ()
   (interactive)
@@ -873,15 +941,15 @@ as the default task."
   (let ((parent-task))
     (save-excursion
       (save-restriction
-        (widen)
-        (while (and (not parent-task) (org-up-heading-safe))
-          (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-            (setq parent-task (point))))
-        (if parent-task
-            (org-with-point-at (or parent-task)
-              (org-clock-in))
-          (when bh/keep-clock-running
-            (bh/clock-in-default-task)))))))
+	(widen)
+	(while (and (not parent-task) (org-up-heading-safe))
+	  (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+	    (setq parent-task (point))))
+	(if parent-task
+	    (org-with-point-at (or parent-task)
+	      (org-clock-in))
+	  (when bh/keep-clock-running
+	    (bh/clock-in-default-task)))))))
 
 (defvar bh/organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
 
@@ -894,9 +962,9 @@ as the default task."
 
 (defun bh/clock-out-maybe ()
   (when (and bh/keep-clock-running
-             (not org-clock-clocking-in)
-             (marker-buffer org-clock-default-task)
-             (not org-clock-resolving-clocks-due-to-idleness))
+	     (not org-clock-clocking-in)
+	     (marker-buffer org-clock-default-task)
+	     (not org-clock-resolving-clocks-due-to-idleness))
     (bh/clock-in-parent-task)))
 
 (add-hook 'org-clock-out-hook 'bh/clock-out-maybe 'append)
@@ -916,14 +984,14 @@ Skip the default task and get the next one.
 A prefix arg forces clock in of the default task."
   (interactive "p")
   (let ((clock-in-to-task
-         (cond
-          ((eq arg 4) org-clock-default-task)
-          ((and (org-clock-is-active)
-                (equal org-clock-default-task (cadr org-clock-history)))
-           (caddr org-clock-history))
-          ((org-clock-is-active) (cadr org-clock-history))
-          ((equal org-clock-default-task (car org-clock-history)) (cadr org-clock-history))
-          (t (car org-clock-history)))))
+	 (cond
+	  ((eq arg 4) org-clock-default-task)
+	  ((and (org-clock-is-active)
+		(equal org-clock-default-task (cadr org-clock-history)))
+	   (caddr org-clock-history))
+	  ((org-clock-is-active) (cadr org-clock-history))
+	  ((equal org-clock-default-task (car org-clock-history)) (cadr org-clock-history))
+	  (t (car org-clock-history)))))
     (org-with-point-at clock-in-to-task
       (org-clock-in nil))))
 
@@ -937,7 +1005,7 @@ A prefix arg forces clock in of the default task."
 ;; global Effort estimate values
 ;; global STYLE property values for completion
 (setq org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 5:00 8:00 10:00 12:00")
-                                    ("STYLE_ALL" . "habit"))))
+				    ("STYLE_ALL" . "habit"))))
 
 (require 'org-checklist)
 
@@ -949,21 +1017,20 @@ A prefix arg forces clock in of the default task."
  'org-babel-load-languages '((python . t) (R . t)))
 
 
-;; (add-to-list 'load-path "~/emacs/extension/mew-6.4")
-;; (autoload 'mew "mew" nil t)
-;; (autoload 'mew-send "mew" nil t)
-;; ;; Optional setup (Read Mail menu for Emacs 21):
-;; (if (boundp 'read-mail-command)
-;;     (setq read-mail-command 'mew))
-;; ;; Optional setup (e.g. C-xm for sending a message):
-;; (autoload 'mew-user-agent-compose "mew" nil t)
-;; (if (boundp 'mail-user-agent)
-;;     (setq mail-user-agent 'mew-user-agent))
-;; (if (fboundp 'define-mail-user-agent)
-;;     (define-mail-user-agent
-;;       'mew-user-agent
-;;       'mew-user-agent-compose
-;;       'mew-draft-send-message
-;;       'mew-draft-kill
-;;       'mew-send-hook))
+(autoload 'mew "mew" nil t)
+(autoload 'mew-send "mew" nil t)
+;; Optional setup (Read Mail menu for Emacs 21):
+(if (boundp 'read-mail-command)
+    (setq read-mail-command 'mew))
+;; Optional setup (e.g. C-xm for sending a message):
+(autoload 'mew-user-agent-compose "mew" nil t)
+(if (boundp 'mail-user-agent)
+    (setq mail-user-agent 'mew-user-agent))
+(if (fboundp 'define-mail-user-agent)
+    (define-mail-user-agent
+      'mew-user-agent
+      'mew-user-agent-compose
+      'mew-draft-send-message
+      'mew-draft-kill
+      'mew-send-hook))
 
