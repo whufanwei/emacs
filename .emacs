@@ -72,7 +72,6 @@
 
 (global-visual-line-mode 1)
 (global-auto-revert-mode 1)
-
 ;; (require 'linum);;行号
 ;; (global-linum-mode t)
 
