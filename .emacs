@@ -538,6 +538,9 @@ frames with exactly two windows."
 (require 'magit)
 (global-set-key [f7] 'magit-status)
 
+(add-to-list 'load-path "~/emacs/extension/nav")
+(require 'nav)
+
 (add-to-list 'load-path "~/emacs/extension/color") 
 (require 'color-theme) 
 (setq color-theme-is-global t)
