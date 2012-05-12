@@ -71,7 +71,7 @@
 (global-set-key "\C-xj" 'align-regexp)
 
 (global-visual-line-mode 1)
-(global-auto-revert-mode 1)
+;; (global-auto-revert-mode 1)
 ;; (require 'linum);;行号
 ;; (global-linum-mode t)
 
@@ -563,6 +563,10 @@ frames with exactly two windows."
 (autoload 'inf-ruby-keys "inf-ruby" "" t)
 (eval-after-load 'ruby-mode
   '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
+
+(add-to-list 'load-path "~/emacs/extension/sunrise-commander")
+(require 'sunrise-commander)
+
 
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/lisp"))
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/contrib/lisp"))

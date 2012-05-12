@@ -78,11 +78,11 @@ in the --type argument to the ack command")
 (defun ack ()
   "Like grep, but using ack-command as the default"
   (interactive)
-  ; Make sure grep has been initialized
+					; Make sure grep has been initialized
   (if (>= emacs-major-version 22)
       (require 'grep)
     (require 'compile))
-  ; Close STDIN to keep ack from going into filter mode
+					; Close STDIN to keep ack from going into filter mode
   (let ((null-device (format "< %s" null-device))
         (grep-command ack-command)
         (grep-history ack-history)
