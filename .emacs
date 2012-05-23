@@ -15,7 +15,7 @@
  '(org-clock-modeline-total (quote auto))
  '(org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00") ("STYLE_ALL" . "habit"))))
  '(org-table-auto-blank-field nil)
- '(reftex-default-bibliography (quote ("~/下载/DLUT-git/body/reference")))
+ '(reftex-default-bibliography (quote ("~/文档/dalunwen/body/reference")))
  '(safe-local-variable-values (quote ((TeX-master . t))))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
@@ -55,9 +55,11 @@
        '("*Messages*" "*scratch*" "*w3m*" "*w3m-cache*")
        clean-buffer-list-kill-never-buffer-names-init))
 
+
 (require 're-builder)
 (setq reb-re-syntax 'string)
 (global-set-key "\C-cr" 're-builder)
+
 
 (defun eval-and-replace (value)
   "Evaluate the sexp at point and replace it with its value"
@@ -111,8 +113,8 @@
 ;; Show 0.2 second later
 (setq ac-auto-show-menu 0.2)
 (setq-default ac-sources '(ac-source-yasnippet    
-                           ac-source-semantic  
-                           ac-source-ropemacs  
+                           ac-source-semantic
+                           ac-source-ropemacs
                            ac-source-imenu    
                            ac-source-words-in-buffer
                            ac-source-words-in-all-buffer
@@ -969,6 +971,7 @@ as the default task."
 	    (org-with-point-at (or parent-task)
 	      (org-clock-in))
 	  (when bh/keep-clock-running
+	    
 	    (bh/clock-in-default-task)))))))
 
 (defvar bh/organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")

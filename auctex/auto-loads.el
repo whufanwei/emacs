@@ -78,7 +78,7 @@ of context-mode-hook.
 ;;;***
 
 ;;;### (autoloads (font-latex-setup) "font-latex" "font-latex.el"
-;;;;;;  (20233 12644))
+;;;;;;  (19254 11585))
 ;;; Generated autoloads from font-latex.el
 
 (autoload 'font-latex-setup "font-latex" "\
@@ -89,7 +89,7 @@ Setup this buffer for LaTeX font-lock.  Usually called from a hook.
 ;;;***
 
 ;;;### (autoloads (docTeX-mode TeX-latex-mode BibTeX-auto-store)
-;;;;;;  "latex" "latex.el" (20233 12918))
+;;;;;;  "latex" "latex.el" (19180 28128))
 ;;; Generated autoloads from latex.el
 
 (autoload 'BibTeX-auto-store "latex" "\
@@ -158,7 +158,7 @@ The return value is the string as entered in the minibuffer.
 
 ;;;### (autoloads (TeX-submit-bug-report ams-tex-mode TeX-auto-generate-global
 ;;;;;;  TeX-auto-generate TeX-plain-tex-mode TeX-tex-mode) "tex"
-;;;;;;  "tex.el" (20233 12722))
+;;;;;;  "tex.el" (19327 63823))
 ;;; Generated autoloads from tex.el
 
 (autoload 'TeX-tex-mode "tex" "\

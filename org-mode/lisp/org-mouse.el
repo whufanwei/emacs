@@ -1,13 +1,12 @@
 ;;; org-mouse.el --- Better mouse support for org-mode
 
-;; Copyright (C) 2006-2011 Free Software Foundation
-;;
+;; Copyright (C) 2006-2012 Free Software Foundation, Inc.
+
 ;; Author: Piotr Zielinski <piotr dot zielinski at gmail dot com>
 ;; Maintainer: Carsten Dominik <carsten at orgmode dot org>
 
-;;
 ;; This file is part of GNU Emacs.
-;;
+
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -20,8 +19,7 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
+
 ;;; Commentary:
 ;;
 ;; Org-mouse provides mouse support for org-mode.
@@ -317,11 +315,11 @@ nor a function, elements of KEYWORDS are used directly."
   (replace-match "")
   (just-one-space))
 
-(defvar rest)
+(defvar org-mouse-rest)
 (defun org-mouse-replace-match-and-surround (newtext &optional fixedcase
 						     literal string subexp)
   "The same as `replace-match', but surrounds the replacement with spaces."
-  (apply 'replace-match rest)
+  (apply 'replace-match org-mouse-rest)
   (save-excursion
     (goto-char (match-beginning (or subexp 0)))
     (just-one-space)
@@ -917,6 +915,7 @@ This means, between the beginning of line and the point."
 	  ((assq :checkbox context) (org-toggle-checkbox))
 	  ((assq :item-bullet context)
 	   (let ((org-cycle-include-plain-lists t)) (org-cycle)))
+	  ((org-footnote-at-reference-p) nil)
 	  (t ad-do-it))))))
 
 (defun org-mouse-move-tree-start (event)
@@ -992,7 +991,7 @@ This means, between the beginning of line and the point."
 	(replace-match replace-text))
       (forward-line))))
 
-(defvar _cmd) ;dynamically scoped from `org-with-remote-undo'.
+(defvar org-mouse-cmd) ;dynamically scoped from `org-with-remote-undo'.
 
 (defun org-mouse-do-remotely (command)
 ;  (org-agenda-check-no-diary)
@@ -1023,7 +1022,7 @@ This means, between the beginning of line and the point."
 	      (setq marker (copy-marker (point)))
 	      (goto-char (max (point-at-bol) (- (point-at-eol) anticol)))
 	      (funcall command)
-	      (message "_cmd: %S" _cmd)
+	      (message "_cmd: %S" org-mouse-cmd)
 	      (message "this-command: %S" this-command)
 	      (unless (eq (marker-position marker) (marker-position endmarker))
 		(setq newhead (org-get-heading))))

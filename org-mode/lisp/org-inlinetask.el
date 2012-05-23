@@ -1,6 +1,6 @@
 ;;; org-inlinetask.el --- Tasks independent of outline hierarchy
 
-;; Copyright (C) 2009-2011 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2012 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
@@ -173,6 +173,7 @@ or, with the additional package \"todonotes\" for LaTeX,
 This should be the state `org-inlinetask-insert-task' should use by
 default, or nil of no state should be assigned."
   :group 'org-inlinetask
+  :version "24.1"
   :type '(choice
 	  (const :tag "No state" nil)
 	  (string :tag "Specific state")))

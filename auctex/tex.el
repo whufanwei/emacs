@@ -172,7 +172,6 @@ the printer has no corresponding command."
      TeX-run-TeX nil
      (context-mode) :help "Run ConTeXt until completion")
     ("BibTeX" "bibtex %s" TeX-run-BibTeX nil t :help "Run BibTeX")
-    ("Biber" "biber %s" TeX-run-Biber nil t :help "Run Biber")
     ,(if (or window-system (getenv "DISPLAY"))
 	'("View" "%V" TeX-run-discard-or-function t t :help "Run Viewer")
        '("View" "dvi2tty -q -w 132 %s" TeX-run-command t t
@@ -216,8 +215,6 @@ TeX-run-TeX: For TeX output.
 TeX-run-interactive: Run TeX or LaTeX interactively.
 
 TeX-run-BibTeX: For BibTeX output.
-
-TeX-run-Biber: For Biber output.
 
 TeX-run-compile: Use `compile' to run the process.
 
@@ -267,7 +264,6 @@ Any additional elements get just transferred to the respective menu entries."
 				(function-item TeX-run-TeX)
 				(function-item TeX-run-interactive)
 				(function-item TeX-run-BibTeX)
-				(function-item TeX-run-Biber)
 				(function-item TeX-run-compile)
 				(function-item TeX-run-shell)
 				(function-item TeX-run-discard)
@@ -1653,12 +1649,6 @@ already established, don't do anything."
   :group 'TeX-command-name
   :type 'string)
   (make-variable-buffer-local 'TeX-command-BibTeX)
-
-(defcustom TeX-command-Biber "Biber"
-  "*The name of the Biber entry in `TeX-command-list'."
-  :group 'TeX-command-name
-  :type 'string)
-  (make-variable-buffer-local 'TeX-command-Biber)
 
 (defcustom TeX-command-Show "View"
   "*The default command to show (view or print) a TeX file.
@@ -3242,7 +3232,7 @@ If TEX is a directory, generate style files for all files in the directory."
 		       (TeX-strip-extension tex TeX-all-extensions t)
 		       ".el"))))
 	((TeX-match-extension tex (append TeX-file-extensions
-					  BibTeX-Biber-file-extensions))
+					  BibTeX-file-extensions))
 	 (save-excursion
 	   (set-buffer (let (enable-local-eval)
 			 (find-file-noselect tex)))
@@ -3262,7 +3252,7 @@ If TEX is a directory, generate style files for all files in the directory."
   (unless (file-directory-p TeX-auto-global)
     (make-directory TeX-auto-global))
   (let ((TeX-file-extensions '("cls" "sty"))
-	(BibTeX-Biber-file-extensions nil))
+	(BibTeX-file-extensions nil))
     (mapc (lambda (macro) (TeX-auto-generate macro TeX-auto-global))
 	  TeX-macro-global))
   (byte-recompile-directory TeX-auto-global 0))
@@ -3570,8 +3560,8 @@ Access to the value should be through the function `TeX-output-extension'.")
 
   (make-variable-buffer-local 'TeX-output-extension)
 
-(defcustom BibTeX-Biber-file-extensions '("bib" "ris" "xml")
-  "Valid file extensions for BibTeX/Biber files."
+(defcustom BibTeX-file-extensions '("bib")
+  "Valid file extensions for BibTeX files."
   :group 'TeX-file-extension
   :type '(repeat (string :format "%v")))
 
@@ -3659,7 +3649,7 @@ t means autodetect, nil means kpathsea is disabled."
     ("png" "${TEXINPUTS}" LaTeX-includegraphics-extensions)
     ("jpg" "${TEXINPUTS}" LaTeX-includegraphics-extensions)
     ("jpeg" "${TEXINPUTS}" LaTeX-includegraphics-extensions)
-    ("bib" "$BIBINPUTS" BibTeX-Biber-file-extensions)
+    ("bib" "$BIBINPUTS" BibTeX-file-extensions)
     ("bst" "$BSTINPUTS" BibTeX-style-extensions))
   "Formats to search for expansion using kpathsea.
 The key of the alist represents the name of the format.  The
@@ -5162,7 +5152,7 @@ With optional argument ARG, also reload the style hooks."
   (if arg
       (setq TeX-style-hook-list nil
 	    BibTeX-global-style-files nil
-	    BibTeX-Biber-global-files nil
+	    BibTeX-global-files nil
 	    TeX-global-input-files nil))
   (let ((TeX-auto-save t))
     (if (buffer-modified-p)
