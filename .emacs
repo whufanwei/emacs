@@ -7,6 +7,7 @@
  '(TeX-command "xelatex -shell-escape")
  '(TeX-engine (quote xetex))
  '(TeX-master nil)
+ '(auto-indent-next-pair-timer-interval (quote ((emacs-lisp-mode 1.2996432781219482) (default 0.5))))
  '(column-number-mode t)
  '(cua-mode t nil (cua-base))
  '(ediff-window-setup-function (quote ediff-setup-windows-plain))
@@ -14,6 +15,7 @@
  '(org-agenda-files (quote ("~/git/org/org.org")))
  '(org-clock-modeline-total (quote auto))
  '(org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00") ("STYLE_ALL" . "habit"))))
+ '(org-indent-mode-turns-on-hiding-stars t)
  '(org-table-auto-blank-field nil)
  '(reftex-default-bibliography (quote ("~/文档/dalunwen/body/reference")))
  '(safe-local-variable-values (quote ((TeX-master . t))))
@@ -36,16 +38,62 @@
 (setq user-full-name "whufanwei")
 (setq user-mail-address "whufanwei@gmail.com")
 (setq track-eol t);; 当光标在行尾上下移动的时候，始终保持在行尾。
+(setq cua-enable-cua-keys nil) ;; only for rectangles
+(setq x-select-enable-clipboard t)
+(setq default-directory "/home/fan/")
 
+(ido-mode t)
+(global-set-key (kbd "C-x b") 'ido-switch-buffer)
+
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq kill-ring-max 200)
+(setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\(\\|[ \t]\\)\\)[ \t\n]*")
+(setq sentence-end-double-space nil)
+
+(setq enable-recursive-minibuffers t)
+(setq-default word-wrap t)
+(setq-default make-backup-files nil)
+(setq-default auto-fill-function 'do-auto-fill)
+(setq default-fill-column 100)
+(setq default-major-mode 'org-mode)
+(setq global-font-lock-mode t)
+(setq auto-image-file-mode t)
+(setq frame-title-format "%b")
+(setq auto-save-interval 20)
+(setq auto-save-timeout 10)
+(setq mouse-yank-at-point t)
+(setq inhibit-startup-message t)
+(setq visible-bell t)
+(global-visual-line-mode 1)
+(global-auto-revert-mode 1)
+(prefer-coding-system 'utf-8)
+
+;; (setq url-using-proxy t)
+;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
+
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
+
+(setq shell-file-name "/bin/zsh")
+(global-set-key (kbd "C-c z") 'shell)
+
+(global-set-key (kbd "C-c g") 'goto-line)
+(global-set-key (kbd "C-c o") 'occur)
+(global-set-key (kbd "C-c f") 'flush-lines)
+(global-set-key (kbd "C-c k") 'keep-lines)
+(global-set-key [f6] 'replace-regexp)
+
+;; maxima字体设定
+(setq imaxima-fnt-size "huge")
+(setq imaxima-use-maxima-mode-flag t)
+
+;; 清理buffer
 (require 'midnight)
-;; clean buffers open longer than 1 days
 (setq clean-buffer-list-delay-general 1)
-;; special buffers are cleaned every 5 hours
 (setq clean-buffer-list-delay-special (* 5 3600))
-;; run the midnight hook every 2 hours
 (setq midnight-period (* 2 60 60))
 (setq clean-buffer-list-kill-regexps
-      '("^.*$"))
+      '("^.*"))
 (defvar clean-buffer-list-kill-never-buffer-names-init
   clean-buffer-list-kill-never-buffer-names
   "Init value for clean-buffer-list-kill-never-buffer-names")
@@ -54,43 +102,32 @@
        '("*Messages*" "*scratch*" "*w3m*" "*w3m-cache*")
        clean-buffer-list-kill-never-buffer-names-init))
 
-
+;; 正则表达式匹配
 (require 're-builder)
 (setq reb-re-syntax 'string)
-(global-set-key "\C-cr" 're-builder)
+(global-set-key (kbd "C-c r") 're-builder)
 
-
-(defun eval-and-replace (value)
-  "Evaluate the sexp at point and replace it with its value"
-  (interactive (list (eval-last-sexp nil)))
-  (kill-sexp -1)
-  (insert (format "%S" value)))
-(global-set-key "\C-ce" 'eval-and-replace)
+;; 使用root账户打开文件
+(require 'tramp)
+(defun sudo-find-file (file-name)
+  "Like find file, but opens the file as root."
+  (interactive "FSudo Find File: ")
+  (let ((tramp-file-name (concat "/sudo::" (expand-file-name file-name))))
+    (find-file tramp-file-name)))
+(global-set-key (kbd "<f9> r") 'sudo-find-file)
 
 ;; 实现程序变量得自动对齐
 (require 'align)
-(global-set-key "\C-xj" 'align-regexp)
-
-(global-visual-line-mode 1)
-;; (global-auto-revert-mode 1)
-;; (require 'linum);;行号
-;; (global-linum-mode t)
-
-(when (fboundp 'windmove-default-keybindings)
-  (windmove-default-keybindings))
-
-(setq shell-file-name "/bin/bash")
-(global-set-key (kbd "C-c z") 'shell)
+(global-set-key (kbd "C-x j") 'align-regexp)
 
 (require 'ess-site)
 
+;; buffer名称唯一
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'reverse)
 (setq uniquify-separator "/")
 (setq uniquify-after-kill-buffer-p t) ; rename after killing uniquified
 (setq uniquify-ignore-buffers-re "^\\*") ; don't muck with special buffers
-
-(prefer-coding-system 'utf-8)
 
 (require 'saveplace)
 (setq-default save-place t)
@@ -104,79 +141,6 @@
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
-(require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "~/emacs/extension/ac-dict")
-(ac-config-default)
-;; 模糊匹配，Fuzzy Matching
-(define-key ac-mode-map (kbd "M-RET") 'auto-complete)
-;; Show 0.2 second later
-(setq ac-auto-show-menu 0.2)
-(setq-default ac-sources '(ac-source-yasnippet    
-                           ac-source-semantic
-                           ac-source-ropemacs
-                           ac-source-imenu    
-                           ac-source-words-in-buffer
-                           ac-source-words-in-all-buffer
-                           ac-source-dictionary  
-                           ac-source-abbrev
-                           ac-source-files-in-current-dir    
-                           ac-source-filename))   
-(setq ac-auto-start 2) 
-(global-auto-complete-mode t)
-
-(setq cua-enable-cua-keys nil) ;; only for rectangles
-
-(setq x-select-enable-clipboard t)
-(put 'downcase-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
-
-(setq default-directory "/home/fan/")
-
-(ido-mode t)
-(global-set-key (kbd "C-x b") 'ido-switch-buffer)
-
-(setq visible-bell t)
-(setq inhibit-startup-message t)
-
-(fset 'yes-or-no-p 'y-or-n-p)
-
-(setq kill-ring-max 200)
-
-(setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\($\\|[ \t]\\)\\)[ \t\n]*")
-(setq sentence-end-double-space nil)
-
-(setq enable-recursive-minibuffers t)
-
-(setq-default auto-fill-function 'do-auto-fill)
-(setq default-fill-column 100)
-(setq default-major-mode 'org-mode)
-
-(setq frame-title-format "%b")
-
-(setq auto-image-file-mode t)
-
-(setq global-font-lock-mode t)
-
-(setq-default word-wrap t)
-
-(setq-default make-backup-files nil)
-
-(setq auto-save-interval 20)
-(setq auto-save-timeout 10)
-
-;; (setq url-using-proxy t)
-;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
-
-(setq mouse-yank-at-point t)
-;; (setq time-stamp-active t)
-;; (setq time-stamp-warn-inactive t)
-;; (setq time-stamp-format "%:y-m-d : H:M:S chunyu")
-
-(global-set-key (kbd "M-g") 'goto-line)
-
-(global-set-key (kbd "C-c o") 'occur)
-(global-set-key (kbd "C-c f") 'flush-lines)
-(global-set-key (kbd "C-c k") 'keep-lines)
 
 (defun move-line (n)
   "Move the current line up or down by N lines."
@@ -221,7 +185,6 @@
       (copy-region-as-kill beg end)))
   )
 
-
 (defun copy-word (&optional arg)
   "Copy words at point into kill-ring"
   (interactive "P")
@@ -260,12 +223,11 @@
   (copy-thing 'beginning-of-parenthesis 'end-of-parenthesis arg)
   )
 
-(global-set-key (kbd "C-c p")         (quote thing-copy-parenthesis-to-mark))
-(global-set-key (kbd "C-c w")         (quote copy-word))
-(global-set-key (kbd "C-c l")         (quote copy-line))
+(global-set-key (kbd "C-c p") (quote thing-copy-parenthesis-to-mark))
+(global-set-key (kbd "C-c w") (quote copy-word))
+(global-set-key (kbd "C-c l") (quote copy-line))
 
 ;; 窗口切换
-
 (defun toggle-window-split ()
   "Vertical split shows more of each line, horizontal split shows
 more lines. This code toggles between them. It only works for
@@ -294,9 +256,7 @@ frames with exactly two windows."
 	  (select-window first-win)
 	  (if this-win-2nd (other-window 1))))))
 
-(global-set-key [(control x) (t)] 'toggle-window-split)  
-
-(global-set-key [f6] 'replace-regexp)
+(global-set-key [(control x) (t)] 'toggle-window-split)
 
 ;; ----------------------注释当前行------------------
 (defun qiang-comment-dwim-line (&optional arg)
@@ -411,7 +371,7 @@ frames with exactly two windows."
 ;;(setq preview-scale-function 1.5)
 (setq LaTeX-math-mode t)
 
-(add-hook 'LaTeX-mode-hook 'turn-on-reftex) 
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
 (setq reftex-enable-partial-scans t)
 (setq reftex-save-parse-info t)
@@ -420,13 +380,13 @@ frames with exactly two windows."
 (setq reftex-toc-split-windows-fraction 0.2)  ;;*toc*buffer 使用整个frame的比例。
 (autoload 'reftex-mode "reftex" "RefTeX Minor Mode" t)
 (autoload 'turn-on-reftex "reftex" "RefTeX Minor Mode" nil)
-(autoload 'reftex-citation "reftex-cite" "Make citation" nil)  
+(autoload 'reftex-citation "reftex-cite" "Make citation" nil)
 (autoload 'reftex-index-phrase-mode "reftex-index" "Phrase mode" t)
 
 ;;;;;;;;;LaTex-mode settings;;;;;
 (add-hook 'LaTeX-mode-hook (lambda ()
 			     (LaTeX-math-mode 1)
-			     (setq TeX-show-compilation nil)   ;;NOT display compilation 
+			     (setq TeX-show-compilation nil)   ;;NOT display compilation
 			     (setq TeX-global-PDF-mode t       ;;PDF mode enable, not plain
 				   TeX-engine 'xetex)  ;;use xelatex default
 			     (setq TeX-clean-confirm nil)
@@ -453,23 +413,8 @@ frames with exactly two windows."
 (require 'highlight-symbol)
 (global-set-key (kbd "<f9> h") 'highlight-symbol-at-point)
 (global-set-key (kbd "<f9> n") 'highlight-symbol-next)
-(global-set-key (kbd "<f9> r") 'highlight-symbol-query-replace)
+;; (global-set-key (kbd "<f9> r") 'highlight-symbol-query-replace)
 (global-set-key (kbd "<f9> p") 'highlight-symbol-prev)
-
-(require 'ac-math)
-(add-to-list 'ac-modes 'latex-mode)   ; make auto-complete aware of {{{latex-mode}}}
-(defun ac-latex-mode-setup ()         ; add ac-sources to default ac-sources
-  (setq ac-sources
-	(append '(ac-source-math-unicode ac-source-math-latex ac-source-latex-commands)
-		ac-sources)))
-(add-hook 'LaTeX-mode-hook 'ac-latex-mode-setup)
-
-(require 'autopair)
-(setq autopair-autowrap t)
-(add-hook 'LaTeX-mode-hook
-	  #'(lambda ()
-	      (push '(?< . ?>)
-		    (getf autopair-extra-pairs :code))))
 
 (require 'cal-china-x)
 (setq mark-holidays-in-calendar t)
@@ -480,21 +425,14 @@ frames with exactly two windows."
 (change-cursor-mode 1) ; On for overwrite/read-only/input mode
 (toggle-cursor-type-when-idle 1) ; On when idle
 
-(setq auto-indent-on-visit-file t) ;; If you want auto-indent on for files
 (require 'auto-indent-mode)
-;; (auto-indent-global-mode)
+(setq auto-indent-on-visit-file t) ;; If you want auto-indent on for files
+(auto-indent-global-mode)
 
 (require 'goto-chg)
 (global-set-key [f11] 'goto-last-change)
 
-(require 'dired-details+)
-
-(require 'fullscreen)
-
 (require 'undo-tree)
-
-(require 'shell-command)
-(shell-command-completion-mode)
 
 (require 'ediff+)
 
@@ -509,27 +447,48 @@ frames with exactly two windows."
 ;; (global-set-key (kbd "C-S j") 'jump-char-backward)
 (global-set-key [(shift control j)] 'jump-char-backward)
 
+
 (add-to-list 'load-path "~/emacs/helm")
 (require 'helm-config)
 (global-set-key (kbd "C-c h") 'helm-mini)
 (helm-mode 1)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
-
 (global-set-key (kbd "C-c y") 'helm-show-kill-ring)
 (global-set-key (kbd "<f9> l") 'helm-locate)
 (global-set-key (kbd "<f9> g") 'helm-do-grep)
 (helm-dired-bindings 1)
 
+(add-to-list 'load-path "~/emacs/auto-complete")
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/dict")
+(ac-config-default)
+;; 模糊匹配，Fuzzy Matching
+(define-key ac-mode-map (kbd "M-RET") 'auto-complete)
+;; Show 0.2 second later
+(setq ac-auto-show-menu 0.2)
+(setq-default ac-sources '(ac-source-yasnippet
+                           ac-source-semantic
+                           ac-source-ropemacs
+                           ac-source-imenu
+			   ac-source-files-in-current-dir
+                           ac-source-words-in-buffer
+                           ac-source-words-in-all-buffer
+                           ac-source-dictionary
+			   ac-source-functions
+                           ac-source-abbrev
+                           ac-source-files-in-current-dir
+                           ac-source-filename))
+(setq ac-auto-start 2)
+(setq ac-dwim t)
+(setq global-auto-complete-mode t)
 
 (add-to-list 'load-path "~/emacs/extension/magit")
 (require 'magit)
 (global-set-key [f7] 'magit-status)
 
-(add-to-list 'load-path "~/emacs/extension/nav")
-(require 'nav)
 
-(add-to-list 'load-path "~/emacs/extension/color") 
-(require 'color-theme) 
+(add-to-list 'load-path "~/emacs/extension/color")
+(require 'color-theme)
 (setq color-theme-is-global t)
 (color-theme-initialize)
 (color-theme-tangotango)
@@ -542,8 +501,7 @@ frames with exactly two windows."
 (add-to-list 'load-path "~/emacs/extension/yasnippet")
 (require 'yasnippet)
 (setq yas/snippet-dirs "~/emacs/extension/yasnippet/snippets")
-(yas/global-mode 1) 
-
+(yas/global-mode 1)
 
 (add-to-list 'load-path "~/emacs/extension/inf-ruby")
 (autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
@@ -551,14 +509,10 @@ frames with exactly two windows."
 (eval-after-load 'ruby-mode
   '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
 
-(add-to-list 'load-path "~/emacs/extension/sunrise-commander")
-(require 'sunrise-commander)
-
-
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/lisp"))
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/contrib/lisp"))
 (require 'org-install)
-(add-to-list 'auto-mode-alist '("\\.\\(org\\  |org_archive\\|txt\\)$" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(org\\  |org_archive\\|txt\\)" . org-mode))
 (require 'org-habit)
 (global-set-key "\C-cc" 'org-capture)
 (global-set-key "\C-ca" 'org-agenda)
@@ -576,7 +530,6 @@ frames with exactly two windows."
 	    (setq yas/trigger-key [tab])
 	    (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
 	    (define-key yas/keymap [tab] 'yas/next-field)))
-
 
 (require 'org-crypt)
 (org-crypt-use-before-save-magic)
@@ -949,7 +902,7 @@ as the default task."
 	    (org-with-point-at (or parent-task)
 	      (org-clock-in))
 	  (when bh/keep-clock-running
-	    
+
 	    (bh/clock-in-default-task)))))))
 
 (defvar bh/organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
@@ -971,7 +924,7 @@ as the default task."
 (add-hook 'org-clock-out-hook 'bh/clock-out-maybe 'append)
 
 
-(require 'org-id)  
+(require 'org-id)
 (defun bh/clock-in-task-by-id (id)
   "Clock in a task by id"
   (save-restriction
