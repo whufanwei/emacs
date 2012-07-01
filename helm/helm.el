@@ -102,9 +102,14 @@
 ;;
 ;;
 (defface helm-source-header
-    '((t (:background "#22083397778B"
-          :foreground "white"
-          :underline t)))
+    '((((background dark))
+       :background "#22083397778B"
+       :foreground "white"
+       :underline t)
+      (((background light))
+       :background "#abd7f0"
+       :foreground "black"
+       :underline t))
   "Face for source header in the helm buffer."
   :group 'helm)
 
@@ -113,6 +118,7 @@
        (:background "green1" :foreground "black"))
       (((background dark))
        (:background "green" :foreground "black"))
+      (((background light)) :background "#d1f5ea")
       (((min-colors 88))
        (:background "green1"))
       (t (:background "green")))
@@ -125,13 +131,27 @@
   :group 'helm)
 
 (defface helm-candidate-number
-    '((t (:background "Yellow" :foreground "black")))
+    '((((background dark)) :background "Yellow" :foreground "black")
+      (((background light)) :background "#faffb5" :foreground "black"))
   "Face for candidate number in mode-line." :group 'helm)
 
 (defface helm-selection
-    '((t (:background "ForestGreen" :underline t)))
+    '((((background dark)) :background "ForestGreen" :underline t)
+      (((background light)) :background "#b5ffd1" :underline t))
   "Face for currently selected item in the helm buffer."
   :group 'helm)
+
+(defface helm-separator
+    '((((background dark)) :foreground "red")
+      (((background light)) :foreground "#ffbfb5"))
+  "Face for multiline source separator."
+  :group 'helm)
+
+(defface helm-action
+    '((t (:underline t)))
+  "Face for action lines in the helm action buffer."
+  :group 'helm)
+
 
 ;;; Variables
 ;;
@@ -570,6 +590,81 @@ If SRC is omitted, use current source."
       (setcdr it value)
     (setcdr src (cons (cons attribute-name value) (cdr src))))
   value)
+
+(defun helm-get-actions-from-type (source)
+  "Get actions list from type attribute of SOURCE."
+  (when (assq 'type source)
+    (assq 'action
+          (assq (helm-attr 'type source)
+                helm-type-attributes))))
+
+(defun helm-append-at-nth (seq elm index)
+  "Append ELM at INDEX in SEQ."
+  (loop for i in seq
+        for count from 1 collect i
+        when (= count index)
+        if (listp elm) append elm
+        else collect elm))
+
+(defun helm-add-action-to-source (name fn source &optional index)
+  "Add new action NAME linked to function FN to SOURCE.
+Function FN should be a valid function that take one arg i.e candidate,
+argument NAME is a string that will appear in action menu
+and SOURCE should be an existing helm source already loaded.
+If INDEX is specified, action is added in action list at INDEX,
+otherwise it is added at end.
+This allow user to add a specific action to an existing source
+without modifying source code."
+  (let ((actions    (helm-attr 'action source))
+        (new-action (list (cons name fn))))
+    (when (symbolp actions)
+      (setq actions (list (cons "Default action" actions))))
+    (helm-attrset 'action
+                  (if index
+                      (helm-append-at-nth actions new-action index)
+                      (append actions new-action))
+                  source)))
+
+(defun* helm-add-action-to-source-if (name fn source predicate
+                                           &optional (index 4) test-only)
+  "Add new action NAME linked to function FN to SOURCE.
+Action is added only if current candidate match PREDICATE.
+This function add an entry in the `action-transformer' attribute
+of SOURCE (or create one if not found).
+Function PREDICATE should take one arg candidate.
+Function FN should be a valid function that take one arg i.e candidate,
+argument NAME is a string that will appear in action menu
+and SOURCE should be an existing helm source already loaded.
+If INDEX is specified, action is added in action list at INDEX.
+Value of INDEX should be always >=1, default to 4.
+This allow user to add a specific `action-tranformer'
+to an existing source without modifying source code.
+E.g
+Add the action \"Byte compile file async\" linked to
+function 'async-byte-compile-file to source `helm-c-source-find-files'
+only when predicate helm-ff-candidates-lisp-p return non--nil:
+
+\(helm-add-action-to-source-if \"Byte compile file async\"
+                              'async-byte-compile-file
+                              helm-c-source-find-files
+                              'helm-ff-candidates-lisp-p\)."
+  (let* ((actions     (helm-attr 'action source))
+         (action-transformers (helm-attr 'action-transformer source))
+         (new-action  (list (cons name fn)))
+         (transformer `(lambda (actions candidate)
+                         (cond ((funcall (quote ,predicate) candidate)
+                                (helm-append-at-nth
+                                 actions (quote ,new-action) ,index))
+                               (t actions)))))
+    (when (symbolp actions)
+      (helm-attrset 'action (list (cons "Default action" actions)) source))
+    (when (symbolp action-transformers)
+      (setq action-transformers (list action-transformers)))
+    (if test-only                       ; debug
+        (delq nil (append (list transformer) action-transformers))
+        (helm-attrset 'action-transformer
+                      (delq nil (append (list transformer) action-transformers))
+                      source))))
 
 (defun helm-set-source-filter (sources)
   "Set the value of `helm-source-filter' to SOURCES and update.
@@ -1051,41 +1146,42 @@ in source."
   "The internal helm function called by `helm'.
 For ANY-SOURCES ANY-INPUT ANY-PROMPT ANY-RESUME ANY-PRESELECT ANY-BUFFER and
 ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
-  (helm-log (concat "[Start session] " (make-string 41 ?+)))
-  (helm-log-eval any-prompt any-preselect
-                 any-buffer any-keymap any-default)
-  (let ((old-overridding-local-map overriding-local-map))
-    (unwind-protect
-         (condition-case v
-             (let ( ;; It is needed because `helm-source-name' is non-nil
-                   ;; when `helm' is invoked by action. Awful global scope.
-                   helm-source-name
-                   helm-in-persistent-action
-                   helm-quit
-                   (case-fold-search t)
-                   (helm-buffer (or any-buffer helm-buffer))
-                   ;; cua-mode ; avoid error when region is selected
-                   )
-               (with-helm-restore-variables
-                 (helm-initialize any-resume any-input any-sources)
-                 (helm-display-buffer helm-buffer)
-                 (helm-log "show prompt")
-                 (unwind-protect
-                      (helm-read-pattern-maybe
-                       any-prompt any-input any-preselect
-                       any-resume any-keymap any-default
-                       (when (and any-history (symbolp any-history))
-                         any-history))
-                   (helm-cleanup)))
-               (prog1 (unless helm-quit
-                        (helm-execute-selection-action-1))
-                 (helm-log (concat "[End session] " (make-string 41 ?-)))))
-           (quit
-            (helm-restore-position-on-quit)
-            (helm-log (concat "[End session (quit)] " (make-string 34 ?-)))
-            nil))
-      (setq overriding-local-map old-overridding-local-map)
-      (helm-log-save-maybe))))
+  (catch 'exit ; `exit-minibuffer' use this tag on exit.
+    (helm-log (concat "[Start session] " (make-string 41 ?+)))
+    (helm-log-eval any-prompt any-preselect
+                   any-buffer any-keymap any-default)
+    (let ((old-overridding-local-map overriding-local-map))
+      (unwind-protect
+           (condition-case v
+               (let ( ;; It is needed because `helm-source-name' is non-nil
+                     ;; when `helm' is invoked by action. Awful global scope.
+                     helm-source-name
+                     helm-in-persistent-action
+                     helm-quit
+                     (case-fold-search t)
+                     (helm-buffer (or any-buffer helm-buffer))
+                     ;; cua-mode ; avoid error when region is selected
+                     )
+                 (with-helm-restore-variables
+                   (helm-initialize any-resume any-input any-sources)
+                   (helm-display-buffer helm-buffer)
+                   (helm-log "show prompt")
+                   (unwind-protect
+                        (helm-read-pattern-maybe
+                         any-prompt any-input any-preselect
+                         any-resume any-keymap any-default
+                         (when (and any-history (symbolp any-history))
+                           any-history))
+                     (helm-cleanup)))
+                 (prog1 (unless helm-quit
+                          (helm-execute-selection-action-1))
+                   (helm-log (concat "[End session] " (make-string 41 ?-)))))
+             (quit
+              (helm-restore-position-on-quit)
+              (helm-log (concat "[End session (quit)] " (make-string 34 ?-)))
+              nil))
+        (setq overriding-local-map old-overridding-local-map)
+        (helm-log-save-maybe)))))
 
 
 ;;; Helm resume
@@ -2067,6 +2163,11 @@ If action buffer is selected, back to the helm buffer."
          `(((name . "Actions")
             (volatile)
             (candidates . ,actions)
+            (candidate-transformer
+             . (lambda (candidates)
+                 (loop for (i . j) in candidates
+                       collect
+                       (cons (propertize i 'face 'helm-action) j))))
             (candidate-number-limit))))
     (set (make-local-variable 'helm-source-filter) nil)
     (set (make-local-variable 'helm-selection-overlay) nil)
@@ -2136,7 +2237,7 @@ Possible value of DIRECTION are 'next or 'previous."
   ;; Setup header-line.
   (let* ((hlstr (helm-interpret-value
                  (assoc-default 'header-line source) source))
-         (hlend (make-string (- (window-width) (length hlstr)) ? )))
+         (hlend (make-string (max 0 (- (window-width) (length hlstr))) ? )))
     (setq header-line-format
           (propertize (concat " " hlstr hlend) 'face 'helm-header))))
   
@@ -2766,9 +2867,14 @@ Acceptable values of CREATE-OR-BUFFER:
       (return-func))))
 
 (defun helm-init-candidates-in-buffer (buffer data)
-  "Register BUFFER with DATA for an helm candidates-in-buffer session."
+  "Register BUFFER with DATA for an helm candidates-in-buffer session.
+DATA can be a list or a plain string."
   (let ((buf (helm-candidate-buffer (get-buffer-create buffer))))
-    (with-current-buffer buf (insert data)))
+    (with-current-buffer buf
+      (erase-buffer)
+      (if (listp data)
+          (loop for i in data do (insert (concat i "\n")))
+          (and (stringp data) (insert data)))))
   buffer)
 
 (defun helm-compile-source--candidates-in-buffer (source)

@@ -5,10 +5,10 @@
 ;; Author: Matthew L. Fidler, Le Wang & Others
 ;; Maintainer: Matthew L. Fidler
 ;; Created: Sat Nov  6 11:02:07 2010 (-0500)
-;; Version: 0.59
-;; Last-Updated: Tue Mar  6 22:37:46 2012 (-0600)
+;; Version: 0.64
+;; Last-Updated: Fri Jun 29 16:16:27 2012 (-0500)
 ;;           By: Matthew L. Fidler
-;;     Update #: 1301
+;;     Update #: 1344
 ;; URL: https://github.com/mlf176f2/auto-indent-mode.el/
 ;; Keywords: Auto Indentation
 ;; Compatibility: Tested with Emacs 23.x
@@ -117,6 +117,28 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Change Log:
+;; 29-Jun-2012    Matthew L. Fidler  
+;;    Last-Updated: Fri Jun 29 16:15:46 2012 (-0500) #1343 (Matthew L. Fidler)
+;;    Added a check to some indentation function to make sure the
+;;    buffer has been modified
+;; 29-Jun-2012    Matthew L. Fidler  
+;;    Last-Updated: Fri Jun 29 15:55:42 2012 (-0500) #1337 (Matthew L. Fidler)
+;;    Grow the idle timer for next indent call.
+;; 29-Jun-2012    Matthew L. Fidler  
+;;    Last-Updated: Fri Jun 29 15:29:34 2012 (-0500) #1324 (Matthew L. Fidler)
+;;    Changed `run-with-timer' to `run-with-idle-timer'
+;; 26-Jun-2012    Matthew L. Fidler  
+;;    Last-Updated: Tue Jun 26 09:14:02 2012 (-0500) #1320 (Matthew L. Fidler)
+;;    Bug fix for point-shift involved in `auto-indent-after-yank-hook'
+;; 13-Jun-2012    Matthew L. Fidler  
+;;    Last-Updated: Wed Jun 13 10:34:07 2012 (-0500) #1307 (Matthew L. Fidler)
+;;    Added `auto-indent-after-yank-hook'
+;; 18-May-2012    Matthew L. Fidler  
+;;    Last-Updated: Fri May 18 14:53:11 2012 (-0500) #1304 (Matthew L. Fidler)
+;;    Changed `auto-indent-next-pair' to be off by default.
+;; 13-Mar-2012    Matthew L. Fidler  
+;;    Last-Updated: Tue Mar 13 09:38:39 2012 (-0500) #1302 (Matthew L. Fidler)
+;;    Made timer for parenthetical statements customizable.  
 ;; 06-Mar-2012    Matthew L. Fidler  
 ;;    Last-Updated: Tue Mar  6 22:35:39 2012 (-0600) #1299 (Matthew L. Fidler)
 ;;    Speed enhancements for parenthetical statements.
@@ -484,6 +506,7 @@ Another home-key will chang to cursor
   :type 'boolean
   :group 'auto-indent)
 
+
 (defalias 'auto-indent-after-begin-or-finish-sexp 'auto-indent-current-pairs)
 (defcustom auto-indent-current-pairs t
   "* Automatically indent the current parenthetical statement"
@@ -501,8 +524,27 @@ When typing .old, the indentation will be updated as follows:
 d.old <- read.csv(\"dat.csv\",
                   na.strings=c(\".\",\"NA\"))
 
+This will slow down your computation, so if you use it make sure
+that the `auto-indent-next-pair-timer-interval' is appropriate
+for your needs.
+
 "
   :type 'boolean
+  :group 'auto-indent)
+
+(defcustom auto-indent-next-pair-timer-interval '((default 0.5))
+  "Number of seconds before the observed parenthetical statement
+is indented. The faster the value, the slower emacs
+responsiveness but the faster emacs indents the region.  The
+slower the value, the faster emacs responds.  This should be changed dynamically
+by typing with `auto-indent-next-pair-timer-interval-multiplier'"
+  :type '(repeat (list (symbol :tag "Major Mode Symbol or default")
+                       (number :tag "Interval")))
+  :group 'auto-indent)
+
+(defcustom auto-indent-next-pair-timer-interval-multiplier 1.5
+  "If the indent operation for a file takes longer than the specified idle timer, grow that timer by this number for a particular mode."
+  :type 'number
   :group 'auto-indent)
 
 (defcustom auto-indent-on-yank-or-paste 't
@@ -1026,9 +1068,7 @@ http://www.emacswiki.org/emacs/AutoIndentation
 
 (defun auto-indent-remove-advice-p (&optional command)
   "Removes advice if the function called is actually an auto-indent function OR it should be disabled in this mode"
-					;  (and (not (memq major-mode auto-indent-disabled-modes-list))
   (string-match "^auto-indent" (symbol-name (or command this-command))))
-                                        ;)
 
 (defun auto-indent-is-yank-p (&optional command)
   "Tests if the function was a yank."
@@ -1053,6 +1093,11 @@ http://www.emacswiki.org/emacs/AutoIndentation
 		 (key-binding (kbd "M-y")))))))
     (symbol-value 'ret)))
 
+(defcustom auto-indent-after-yank-hook nil
+  "Hooks to run after auto-indent's yank.  The arguments sent to the function should be the two points in the yank."
+  :type 'hook
+  :group 'auto-indent)
+
 (defun auto-indent-yank-engine ()
   "Engine for the auto-indent yank functions/advices"
   (when (not (minibufferp))
@@ -1062,14 +1107,23 @@ http://www.emacswiki.org/emacs/AutoIndentation
 	  (skip-chars-backward " \t")
 	  (when (looking-at "[ \t]+")
 	    (replace-match " ")))
-	(if auto-indent-on-yank-or-paste
-	    (save-excursion
-	      (indent-region (progn (goto-char (mark t)) (point-at-bol))
-			     (progn (goto-char pt) (point-at-eol)))))
-        (if auto-indent-mode-untabify-on-yank-or-paste
-	    (save-excursion
-	      (untabify (progn (goto-char (mark t)) (point-at-bol))
-			(progn (goto-char pt) (point-at-eol)))))))))
+	(let (p1 p2)
+          (save-excursion
+            (save-restriction
+              (narrow-to-region (progn (goto-char (mark t)) (point-at-bol))
+                                (progn (goto-char pt) (point-at-eol)))
+              (condition-case err
+                  (run-hook-with-args 'auto-indent-after-yank-hook (point-min) (point-max))
+                (error
+                 (message "[Auto-Indent Mode] Ignoring error when running hook `auto-indent-after-yank-hook': %s" (error-message-string err))))
+              (setq p1 (point-min))
+              (setq p2 (point-max)))
+            (if auto-indent-on-yank-or-paste
+                (indent-region p1 p2))
+            (save-restriction
+              (narrow-to-region p1 p2)
+              (if auto-indent-mode-untabify-on-yank-or-paste
+                  (untabify (point-min) (point-max))))))))))
 
 (defadvice move-beginning-of-line (around auto-indent-minor-mode-advice)
   (let (at-beginning)
@@ -1599,15 +1653,53 @@ Allows the kill ring save to delete the beginning white-space if desired."
 
 (defvar auto-indent-par-region-timer nil)
 
+(defun auto-indent-add-to-alist (alist-var elt-cons &optional no-replace)
+  "Add to the value of ALIST-VAR an element ELT-CONS if it isn't there yet.
+If an element with the same car as the car of ELT-CONS is already present,
+replace it with ELT-CONS unless NO-REPLACE is non-nil; if a matching
+element is not already present, add ELT-CONS to the front of the alist.
+The test for presence of the car of ELT-CONS is done with `equal'."
+  (let (
+        (case-fold-search 't)
+        (existing-element (assoc (car elt-cons) (symbol-value alist-var))))
+    (if existing-element
+        (or no-replace
+            (rplacd existing-element (cdr elt-cons)))
+      (set alist-var (cons elt-cons (symbol-value alist-var))))))
+
 (defun auto-indent-par-region ()
   "Indents a parenthetical region (based on a timer)"
   (let ((mark-active mark-active))
-    (when (not (minibufferp))
-      (indent-region auto-indent-pairs-begin auto-indent-pairs-end)
-      (when (or (> (point) auto-indent-pairs-end)
-                (< (point) auto-indent-pairs-begin))
-        (set (make-local-variable 'auto-indent-pairs-begin) nil)
-        (set (make-local-variable 'auto-indent-pairs-end) nil)))))
+    (unless (buffer-modified-p)
+      (when (not (minibufferp))
+        (let ((start-time (float-time))
+              (interval (assoc major-mode auto-indent-next-pair-timer-interval))
+              indent-time)
+          (if interval
+              (setq interval (cadr interval))
+            (setq interval (cadr (assoc 'default auto-indent-next-pair-timer-interval))))
+          (indent-region auto-indent-pairs-begin auto-indent-pairs-end)
+          (setq indent-time (- (float-time) start-time))
+          (when (> indent-time interval)
+            (setq indent-time (* indent-time auto-indent-next-pair-timer-interval-multiplier))
+            (auto-indent-add-to-alist 'auto-indent-next-pair-timer-interval `(,major-mode ,indent-time))
+            (customize-save-variable 'auto-indent-next-pair-timer-interval auto-indent-next-pair-timer-interval)))
+        (when (or (> (point) auto-indent-pairs-end)
+                  (< (point) auto-indent-pairs-begin))
+          (set (make-local-variable 'auto-indent-pairs-begin) nil)
+          (set (make-local-variable 'auto-indent-pairs-end) nil))))))
+
+(defun auto-indent-start-next-pair-timer ()
+  "Starts the timer to indent the next pair."
+  (interactive)
+  (let ((interval (assoc major-mode auto-indent-next-pair-timer-interval)))
+    (if interval
+        (setq interval (cadr interval))
+      (setq interval (cadr (assoc 'default auto-indent-next-pair-timer-interval))))
+    (if auto-indent-par-region-timer
+        (cancel-timer auto-indent-par-region-timer))
+    (set (make-local-variable 'auto-indent-par-region-timer)
+         (run-with-idle-timer interval nil 'auto-indent-par-region))))
 
 (defun auto-indent-mode-post-command-hook-last ()
   "Last hook run to take care of auto-indenting that needs to be performed after all other post-command hooks have run (like sexp auto-indenting)"
@@ -1639,20 +1731,14 @@ Allows the kill ring save to delete the beginning white-space if desired."
                                 (foward-list)
                                 (point))
                             (error (point)))))))
-            (if auto-indent-par-region-timer
-                (cancel-timer auto-indent-par-region-timer))
-            (set (make-local-variable 'auto-indent-par-region-timer)
-                 (run-with-timer 0.25 nil 'auto-indent-par-region)))
+            (auto-indent-start-next-pair-timer))
           (when (and auto-indent-current-pairs
                      auto-indent-pairs-begin)
             (setq auto-indent-pairs-begin (min (point)
                                                auto-indent-pairs-begin))
             (setq auto-indent-pairs-end (max (point)
                                              auto-indent-pairs-end))
-            (if auto-indent-par-region-timer
-                (cancel-timer auto-indent-par-region-timer))
-            (set (make-local-variable 'auto-indent-par-region-timer)
-                 (run-with-timer 0.25 nil 'auto-indent-par-region)))
+            (auto-indent-start-next-pair-timer))
           (when (and auto-indent-current-pairs
                      (not auto-indent-pairs-begin)
                      (auto-indent-point-inside-pairs-p))
@@ -1670,10 +1756,7 @@ Allows the kill ring save to delete the beginning white-space if desired."
                    (min p1 (or auto-indent-pairs-begin (point))))
               (set (make-local-variable 'auto-indent-pairs-end)
                    (min p2 (or auto-indent-pairs-end (point))))
-              (if auto-indent-par-region-timer
-                  (cancel-timer auto-indent-par-region-timer))
-              (set (make-local-variable 'auto-indent-par-region-timer)
-                   (run-with-timer 0.25 nil 'auto-indent-par-region))))))
+              (auto-indent-start-next-pair-timer)))))
     (error (message "[Auto-Indent-Mode]: Ignored indentation error in `auto-indent-mode-post-command-hook-last' %s" (error-message-string err)))))
 
 (defun auto-indent-mode-post-command-hook ()

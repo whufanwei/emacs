@@ -22,6 +22,7 @@
 ;;; Embeded documentation.
 ;;
 ;;
+;;;###autoload
 (defvar helm-mode-line-string "\
 \\<helm-map>\
 \\[helm-help]:Help \
@@ -106,7 +107,7 @@ INSERT-CONTENT-FN is the text to be displayed in BUFNAME."
     (switch-to-buffer (get-buffer-create bufname))
     (erase-buffer)
     (funcall insert-content-fn)
-    (setq mode-line-format "%b (SPC,C-v:NextPage  b,M-v:PrevPage  other:Exit)")
+    (setq mode-line-format "%b (SPC,C-v:NextPage  b,M-v:PrevPage  C-s/r:Isearch other:Exit)")
     (setq cursor-type nil)
     (goto-char 1)
     (helm-help-event-loop)))
@@ -116,7 +117,9 @@ INSERT-CONTENT-FN is the text to be displayed in BUFNAME."
     (loop for event = (read-event) do
           (case event
             ((?\C-v ? )  (scroll-up))
-            ((?\M-v ?b) (scroll-down))
+            ((?\M-v ?b)  (scroll-down))
+            ((?\C-s)     (isearch-forward))
+            ((?\C-r)     (isearch-backward))
             (t (return))))))
 
 ;;;###autoload
@@ -223,6 +226,7 @@ This list is customizable, see `helm-buffers-favorite-modes'.
 \\[helm-enlarge-window]\t\t->Enlarge helm window.
 \\[helm-narrow-window]\t\t->Narrow helm window.
 \\[helm-ff-run-toggle-basename]\t\t->Toggle basename/fullpath.
+\\[helm-ff-run-find-file-as-root]\t\t->Find file as root.
 \\[helm-send-bug-report-from-helm]\t\t->Send Bug report.
 \\[helm-ff-help]\t\t->Display this help info.
 \n== Helm Map ==
@@ -263,6 +267,7 @@ This list is customizable, see `helm-buffers-favorite-modes'.
   "== Helm Generic files Map ==\
 \nSpecific commands for helm locate and others files sources:
 \\<helm-generic-files-map>
+\\[helm-ff-run-toggle-basename]\t\t->Toggle basename.
 \\[helm-ff-run-grep]\t\t->Run grep (C-u recurse).
 \\[helm-ff-run-pdfgrep]\t\t->Run Pdfgrep on marked files.
 \\[helm-ff-run-delete-file]\t\t->Delete file.
@@ -443,10 +448,35 @@ Otherwise your command will be called many times like this:
   (let ((helm-help-message helm-c-esh-help-message))
     (helm-help)))
 
+;;; Ido virtual buffer help
+;;
+;;
+(defvar helm-buffers-ido-virtual-help-message
+  "== Helm ido virtual buffers Map ==\
+\nSpecific commands for ido virtuals buffers:
+\\<helm-buffers-ido-virtual-map>
+\\[helm-ff-run-switch-other-window]\t\t->Switch other window. 
+\\[helm-ff-run-switch-other-frame]\t\t->Switch other frame.
+\\[helm-ff-run-grep]\t\t->Grep file.
+\\[helm-ff-run-zgrep]\t\t->Zgrep file.
+\\[helm-ff-run-delete-file]\t\t->Delete file.
+\\[helm-ff-run-open-file-externally]\t\t->Open file externally.
+\\[helm-buffers-ido-virtual-help]\t\t->Display this help.
+\n== Helm Map ==
+\\{helm-map}")
+
+;;;###autoload
+(defun helm-buffers-ido-virtual-help ()
+  "Help command for ido virtual buffers."
+  (interactive)
+  (let ((helm-help-message helm-buffers-ido-virtual-help-message))
+    (helm-help)))
+
 
 ;;; Mode line strings
 ;;
 ;;
+;;;###autoload
 (defvar helm-buffer-mode-line-string
   '("Buffer(s)" "\
 \\<helm-c-buffer-map>\
@@ -458,6 +488,19 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
     "String displayed in mode-line in `helm-c-source-buffers-list'"))
 
+;;;###autoload
+(defvar helm-buffers-ido-virtual-mode-line-string
+  '("Killed Buffer(s)" "\
+\\<helm-buffers-ido-virtual-map>\
+\\[helm-buffers-ido-virtual-help]:Help \
+\\<helm-map>\
+\\[helm-select-action]:Act \
+\\[helm-exit-minibuffer]/\
+\\[helm-select-2nd-action-or-end-of-line]/\
+\\[helm-select-3rd-action]:NthAct"
+    "String displayed in mode-line in `helm-c-source-buffers-list'"))
+
+;;;###autoload
 (defvar helm-ff-mode-line-string "\
 \\<helm-find-files-map>\
 \\[helm-ff-help]:Help \
@@ -468,6 +511,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-c-source-find-files'")
 
+;;;###autoload
 (defvar helm-read-file-name-mode-line-string "\
 \\<helm-c-read-file-map>\
 \\[helm-read-file-name-help]:Help \
@@ -478,6 +522,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-c-source-find-files'")
 
+;;;###autoload
 (defvar helm-generic-file-mode-line-string "\
 \\<helm-generic-files-map>\
 \\[helm-generic-file-help]:Help \
@@ -488,6 +533,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in Locate.")
 
+;;;###autoload
 (defvar helm-grep-mode-line-string"\
 \\<helm-c-grep-map>\
 \\[helm-grep-help]:Help \
@@ -498,6 +544,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-do-grep'.")
 
+;;;###autoload
 (defvar helm-pdfgrep-mode-line-string "\
 \\<helm-c-pdfgrep-map>\
 \\[helm-pdfgrep-help]:Help \
@@ -508,6 +555,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-do-pdfgrep'.")
 
+;;;###autoload
 (defvar helm-etags-mode-line-string "\
 \\<helm-c-etags-map>\
 \\[helm-etags-help]:Help \
@@ -518,6 +566,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-c-etags-select'.")
 
+;;;###autoload
 (defvar helm-c-ucs-mode-line-string "\
 \\<helm-c-ucs-map>\
 \\[helm-c-ucs-help]:Help \
@@ -528,6 +577,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct"
   "String displayed in mode-line in `helm-ucs'.")
 
+;;;###autoload
 (defvar helm-bookmark-mode-line-string
   '("Bookmark(s)" "\
 \\<helm-c-bookmark-map>\
@@ -539,6 +589,7 @@ Otherwise your command will be called many times like this:
 \\[helm-select-3rd-action]:NthAct")
   "String displayed in mode-line in `helm-c-source-buffers-list'")
 
+;;;###autoload
 (defvar helm-occur-mode-line "\
 \\<helm-map>\
 \\[helm-help]:Help \

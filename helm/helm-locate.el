@@ -23,7 +23,6 @@
 
 (eval-when-compile (require 'cl))
 (require 'helm)
-;(require 'helm-mode)
 
 
 (defgroup helm-locate nil
@@ -63,6 +62,7 @@ The \"-r\" option must be the last option."
 (defvar helm-generic-files-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-]")     'helm-ff-run-toggle-basename)
     (define-key map (kbd "M-g s")   'helm-ff-run-grep)
     (define-key map (kbd "M-g z")   'helm-ff-run-zgrep)
     (define-key map (kbd "M-g p")   'helm-ff-run-pdfgrep)
@@ -105,6 +105,7 @@ fall back to `default-directory' if FROM-FF is nil."
 if LOCALDB is non--nil search and use a local locate db file.
 INIT is a string to use as initial input in prompt.
 See `helm-locate-with-db' and `helm-locate'."
+  (require 'helm-mode)
   (helm-locate-with-db
    (and localdb
         (or (helm-ff-find-locatedb from-ff)
@@ -143,7 +144,8 @@ Argument INITIAL-INPUT is a string to use as initial-input.
 See also `helm-locate'."
   (when (and db (stringp db)) (setq db (list db)))
   (helm-locate-set-command)
-  (let ((helm-c-locate-command
+  (let ((helm-ff-transformer-show-only-basename nil)
+        (helm-c-locate-command
          (if db
              (replace-regexp-in-string
               "locate"

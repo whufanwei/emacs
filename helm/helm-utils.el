@@ -22,6 +22,7 @@
 (require 'compile) ; Fixme: Is this needed?
 (require 'dired)
 
+(declare-function helm-find-files-1 "helm-files.el" (fname &optional preselect))
 
 
 (defgroup helm-utils nil
@@ -33,11 +34,10 @@
   :type 'string
   :group 'helm-utils)
 
-(defcustom helm-c-enable-eval-defun-hack t
-  "If non-nil, execute `helm' using the source at point when C-M-x is pressed.
-This hack is invoked when pressing C-M-x in the form \
- (defvar helm-c-source-XXX ...) or (setq helm-c-source-XXX ...)."
-  :type 'boolean
+(defcustom helm-yank-symbol-first nil
+  "`helm-yank-text-at-point' yanks symbol at point on first
+invocation if this is non-nil."
+  :type  'boolean
   :group 'helm-utils)
 
 (defcustom helm-default-kbsize 1024.0
@@ -256,23 +256,23 @@ With a numeric prefix arg show only the ARG number of candidates."
 The match is done with `string-match'."
   (string-match helm-pattern candidate))
 
-(defun helm-c-skip-entries (list regexp)
-  "Remove entries which matches REGEXP from LIST."
-  (remove-if (lambda (x) (and (stringp x) (string-match regexp x)))
-             list))
+(defun helm-skip-entries (seq regexp-list)
+  "Remove entries which matches one of REGEXP-LIST from SEQ."
+  (loop for i in seq
+        unless (loop for regexp in regexp-list
+                     thereis (and (stringp i)
+                                  (string-match regexp i)))
+        collect i))
 
-(defun helm-c-shadow-entries (list regexp)
-  "Display elements of LIST matching REGEXP with the `file-name-shadow' face."
-  (mapcar (lambda (file)
-            ;; Add shadow face property to boring files.
-            (let ((face (if (facep 'file-name-shadow)
-                            'file-name-shadow
-                            ;; fall back to default on XEmacs
-                            'default)))
-              (if (string-match regexp file)
-                  (setq file (propertize file 'face face))))
-            file)
-          list))
+(defun helm-shadow-entries (seq regexp-list)
+  "Put shadow property on entries in SEQ matching a regexp in REGEXP-LIST."
+  (let ((face 'italic))
+    (loop for i in seq
+          if (loop for regexp in regexp-list
+                   thereis (and (stringp i)
+                                (string-match regexp i)))
+          collect (propertize i 'face face)
+          else collect i)))
 
 (defun helm-c-stringify (str-or-sym)
   "Get string of STR-OR-SYM."
@@ -320,20 +320,6 @@ Default is `eq'."
         finally return
         (loop for i being the hash-values in cont collect i)))
 
-(defadvice eval-defun (after helm-source-hack activate)
-  "Allow immediate execution of helm source when evaling it.
-See `helm-c-enable-eval-defun-hack'."
-  (when helm-c-enable-eval-defun-hack
-    (let ((varsym (save-excursion
-                    (beginning-of-defun)
-                    (forward-char 1)
-                    (when (memq (read (current-buffer)) '(defvar setq))
-                      (read (current-buffer))))))
-      (when (string-match "^helm-c-source-" (symbol-name varsym))
-        (helm varsym)))))
-;; (progn (ad-disable-advice 'eval-defun 'after 'helm-source-hack) (ad-update 'eval-defun))
-
-(declare-function helm-find-files-1 "helm-files.el" (fname &optional preselect))
 ;;;###autoload
 (defun helm-quit-and-find-file ()
   "Drop into `helm-find-files' from `helm'.
@@ -365,10 +351,10 @@ from its directory."
 
 (defmacro* helm-c-walk-directory (directory &key path (directories t) match)
   "Walk through DIRECTORY tree.
-PATH can be one of basename, relative, or full.
-DIRECTORIES when non--nil (default) return also directories names, otherwise
-skip directories names.
-MATCH match only filenames matching regexp MATCH."
+Argument PATH can be one of basename, relative, or full, default to basename.
+Argument DIRECTORIES when non--nil (default) return also directories names,
+otherwise skip directories names.
+Argument MATCH can be a predicate or a regexp."
   `(let (result
          (fn (case ,path
                (basename 'file-name-nondirectory)
@@ -385,11 +371,14 @@ MATCH match only filenames matching regexp MATCH."
                                 ;; Don't recurse in directory symlink.
                                 (unless (file-symlink-p f)
                                   (ls-R f)))
-                      else do
-                      (unless (and ,match (not (string-match
-                                                ,match
-                                                (file-name-nondirectory f))))
-                        (push (funcall fn f) result)))))
+                      else when
+                      (and ,match
+                           (if (functionp ,match)
+                               (funcall ,match f)
+                               (and (stringp ,match)
+                                    (string-match
+                                     ,match (file-name-nondirectory f)))))
+                      do (push (funcall fn f) result))))
        (ls-R ,directory)
        (nreverse result))))
 
@@ -540,19 +529,17 @@ Useful in dired buffers when there is inserted subdirs."
 ;; Internal
 (defvar helm-match-line-overlay nil)
 
-(defun helm-match-line-color-current-line (&optional start end buf face rec)
+(defun helm-match-line-color-current-line (&optional start end buf face)
   "Highlight and underline current position"
-  (let ((args (list (or start (line-beginning-position))
-                    (or end (1+ (line-end-position)))
-                    buf)))
+  (let* ((start (or start (line-beginning-position)))
+         (end (or end (1+ (line-end-position))))
+         (args (list start end buf)))
     (if (not helm-match-line-overlay)
         (setq helm-match-line-overlay (apply 'make-overlay args))
-        (apply 'move-overlay helm-match-line-overlay args)))
-  (overlay-put helm-match-line-overlay
-               'face (or face 'helm-selection-line))
-  (when rec
-    (goto-char start)
-    (recenter)))
+      (apply 'move-overlay helm-match-line-overlay args))
+    (overlay-put helm-match-line-overlay
+                 'face (or face 'helm-selection-line))
+    (recenter-top-bottom)))
 
 (defalias 'helm-persistent-highlight-point 'helm-match-line-color-current-line)
 
@@ -670,7 +657,14 @@ directory, open this directory."
     (helm-match-line-color-current-line)))
 
 (defun helm-find-file-as-root (candidate)
-  (find-file (concat "/" helm-su-or-sudo "::" (expand-file-name candidate))))
+  (let ((buf (helm-c-basename candidate)))
+    (if (buffer-live-p (get-buffer buf))
+        (progn
+          (set-buffer buf)
+          (find-alternate-file (concat "/" helm-su-or-sudo
+                                       "::" (expand-file-name candidate))))
+        (find-file (concat "/" helm-su-or-sudo
+                           "::" (expand-file-name candidate))))))
 
 (defun helm-find-many-files (ignore)
   (mapc 'find-file (helm-marked-candidates)))
@@ -721,25 +715,48 @@ directory, open this directory."
 ;; Internal
 (defvar helm-yank-point nil)
 
+(defun helm-insert-in-minibuffer (word &optional replace follow)
+  "Insert WORD in minibuffer.
+If REPLACE is non--nil, remove the actual content of minibuffer
+and replace it with WORD, otherwise WORD is appended.
+Argument FOLLOW is used to notify if we are in `helm-follow-mode'.
+If it is the case (i.e FOLLOW non--nil) function have no effect
+and return nil.
+See `helm-find-files-persistent-action' for usage."
+  (unless follow
+    (with-current-buffer (window-buffer (minibuffer-window))
+      (delete-minibuffer-contents)
+      (set-text-properties 0 (length word) nil word)
+      (insert (concat (if replace "" helm-pattern) word)))))
+
 ;;;###autoload
 (defun helm-yank-text-at-point ()
-  "Yank text at point in minibuffer."
+  "Yank text at point in invocation buffer into minibuffer.
+
+`helm-yank-symbol-first' controls whether the first yank grabs
+the entire symbol.
+"
   (interactive)
-  (let (input)
-    (flet ((insert-in-minibuffer (word)
-             (with-selected-window (minibuffer-window)
-               (let ((str helm-pattern))
-                 (delete-minibuffer-contents)
-                 (set-text-properties 0 (length word) nil word)
-                 (insert (concat str word))))))
-      (with-helm-current-buffer
-        ;; Start to initial point if C-w have never been hit.
-        (unless helm-yank-point (setq helm-yank-point (point)))
-        (and helm-yank-point (goto-char helm-yank-point))
-        (forward-word 1)
-        (setq input (buffer-substring-no-properties helm-yank-point (point)))
-        (setq helm-yank-point (point))) ; End of last forward-word
-      (insert-in-minibuffer input))))
+  (with-helm-current-buffer
+    ;; Start to initial point if C-w have never been hit.
+    (if (or helm-yank-point
+            (not helm-yank-symbol-first))
+        (progn
+          (unless helm-yank-point (setq helm-yank-point (point)))
+          (goto-char helm-yank-point)
+          (forward-word 1)
+          (helm-insert-in-minibuffer (buffer-substring-no-properties helm-yank-point (point)))
+          (setq helm-yank-point (point)))
+      (let* ((sym (symbol-at-point))
+             (str (and sym
+                       (symbol-name sym))))
+        (if str
+            (progn
+              (helm-insert-in-minibuffer str)
+              (setq helm-yank-point (cdr (bounds-of-thing-at-point 'symbol)))
+              (goto-char helm-yank-point))
+          (setq helm-yank-point (point))
+          (helm-yank-text-at-point))))))
 
 (defun helm-reset-yank-point ()
   (setq helm-yank-point nil))

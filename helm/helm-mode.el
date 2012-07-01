@@ -22,6 +22,10 @@
 (require 'helm-files)
 
 
+(defgroup helm-mode nil
+  "Enable helm completion."
+  :group 'helm)
+
 (defcustom helm-completing-read-handlers-alist
   '((describe-function . helm-completing-read-symbols)
     (describe-variable . helm-completing-read-symbols)
@@ -56,7 +60,7 @@ e.g ido completion for `find-file':
 same as
 \(find-file . ido-read-file-name\)
 Note that you don't need to enable `ido-mode' for this to work."
-  :group 'helm-files
+  :group 'helm-mode
   :type '(alist :key-type symbol :value-type symbol))
 
 
@@ -130,6 +134,7 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
                       cand)
         else collect cand))
 
+;;;###autoload
 (defun* helm-comp-read (prompt collection
                                &key
                                test
@@ -480,7 +485,10 @@ See documentation of `completing-read' and `all-completions' for details."
          (minibuffer-completion-predicate predicate)
          ;; Be sure this pesty *completion* buffer doesn't popup.
          (minibuffer-setup-hook (remove 'minibuffer-completion-help
-                                        minibuffer-setup-hook)))
+                                        minibuffer-setup-hook))
+         ;; Disable hack that could be used before `completing-read'.
+         ;; i.e (push ?\t unread-command-events).
+         unread-command-events)
     (when (eq def-com 'ido) (setq def-com 'ido-completing-read))
     (unless (or (not entry) def-com)
       ;; An entry in *read-handlers-alist exists but have
@@ -641,6 +649,7 @@ Keys description:
            :input initial-input
            :prompt prompt
            :resume 'noresume
+           :keymap helm-map
            :buffer buffer
            :preselect preselect)
           (when (and (not (string= helm-pattern ""))
@@ -753,7 +762,7 @@ You can add such functions to `helm-completing-read-handlers-alist'
 with a nil value.
 
 Note: This mode will work only partially on Emacs23."
-  :group 'helm
+  :group 'helm-mode
   :global t
   :lighter helm-completion-mode-string
   (declare (special completing-read-function))

@@ -11,7 +11,7 @@
  '(cua-mode t nil (cua-base))
  '(ediff-window-setup-function (quote ediff-setup-windows-plain))
  '(fringe-mode (quote (nil . 0)) nil (fringe))
- '(org-agenda-files (quote ("~/git/org/org.org" "/home/fan/git/org/refile.org")))
+ '(org-agenda-files (quote ("~/git/org/org.org")))
  '(org-clock-modeline-total (quote auto))
  '(org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00") ("STYLE_ALL" . "habit"))))
  '(org-table-auto-blank-field nil)
@@ -32,7 +32,6 @@
 ;;M-x  eval-region   使.emacs中选中的region中的语句立刻生效。
 ;;M-x  eval-buffer   使当前的buffer中的设置语句立刻生效。
 ;;M-x  load-file ~/.emacs  载入.emacs文件，从而使其中的设置生效。
-
 
 (setq user-full-name "whufanwei")
 (setq user-mail-address "whufanwei@gmail.com")
@@ -222,19 +221,6 @@
       (copy-region-as-kill beg end)))
   )
 
-(defun paste-to-mark(&optional arg)
-  "Paste things to mark, or to the prompt in shell-mode"
-  (let ((pasteMe 
-         (lambda()
-           (if (string= "shell-mode" major-mode)
-               (progn (comint-next-prompt 25535) (yank))
-             (progn (goto-char (mark)) (yank) )))))
-    (if arg
-        (if (= arg 1)
-            nil
-          (funcall pasteMe))
-      (funcall pasteMe))
-    ))
 
 (defun copy-word (&optional arg)
   "Copy words at point into kill-ring"
@@ -272,7 +258,6 @@
      When used in shell-mode, it will paste parenthesis on shell prompt by default "
   (interactive "P")
   (copy-thing 'beginning-of-parenthesis 'end-of-parenthesis arg)
-  ;; (paste-to-mark arg)
   )
 
 (global-set-key (kbd "C-c p")         (quote thing-copy-parenthesis-to-mark))
@@ -497,7 +482,7 @@ frames with exactly two windows."
 
 (setq auto-indent-on-visit-file t) ;; If you want auto-indent on for files
 (require 'auto-indent-mode)
-(auto-indent-global-mode)
+;; (auto-indent-global-mode)
 
 (require 'goto-chg)
 (global-set-key [f11] 'goto-last-change)
@@ -597,14 +582,9 @@ frames with exactly two windows."
 (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
 (setq org-crypt-key nil)
-;; GPG key to use for encryption
-;; Either the Key ID or set to nil to use symmetric encryption.
-;; (setq auto-save-default nil)
-;; Auto-saving does not cooperate with org-crypt.el: so you need
-;; to turn it off if you plan to use org-crypt.el quite often.
 (setq org-crypt-disable-auto-save nil)
 
-(setq org-agenda-files (quote ("~/git/org/*.org")))
+(setq org-agenda-files (quote ("~/git/org/org.org")))
 (setq org-default-notes-file "~/git/org/refile.org")
 
 (global-set-key (kbd "C-c d") 'org-decrypt-entry)
@@ -615,13 +595,11 @@ frames with exactly two windows."
 (global-set-key (kbd "<f9> o") 'bh/punch-out)
 (global-set-key (kbd "<f9> SPC") 'bh/clock-in-last-task)
 (define-key org-mode-map (kbd "C-k") 'zl-delete-line);删除一行
-;; (define-key org-mode-map (kbd "C-,") 'goto-last-change);删除一行
+
 (add-hook 'org-mode-hook
 	  (lambda ()
 	    (define-key org-mode-map "\C-a" 'move-beginning-of-line)
 	    (define-key org-mode-map "\C-e" 'move-end-of-line)))
-
-
 
 (setq org-todo-keywords
       (quote ((sequence "TODO(t)" "NEXT(n)" "STARTED(s)" "|" "DONE(d!/!)")
@@ -1038,6 +1016,7 @@ A prefix arg forces clock in of the default task."
 
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t) (R . t)))
+
 
 
 (autoload 'mew "mew" nil t)
