@@ -1,19 +1,15 @@
 (custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(column-number-mode t)
  '(fringe-mode (quote (nil . 0)) nil (fringe))
  '(org-clock-modeline-total (quote auto))
  '(org-indent-mode-turns-on-hiding-stars t)
  '(org-table-auto-blank-field nil)
- ;; '(reftex-default-bibliography (quote ("~/文档/dalunwen/body/reference")))
  '(scroll-bar-mode nil)
- '(show-paren-mode t)
- '(size-indication-mode t)
  '(tool-bar-mode nil))
 (custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(default ((t (:inherit nil :stipple nil :background "#2e3434" :foreground "#eeeeec" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 181 :width normal :foundry "unknown" :family "Ubuntu Mono")))))
 
 ;;M-x  eval-last-sexp 使.emacs中光标前的那一条语句立刻生效。
@@ -33,6 +29,9 @@
 (setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\(\\|[ \t]\\)\\)[ \t\n]*")
 (setq sentence-end-double-space nil)
 
+(show-paren-mode t)
+(column-number-mode 1)
+(size-indication-mode 1)
 (setq enable-recursive-minibuffers t)
 (setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
@@ -64,9 +63,9 @@
 (setq auto-save-interval 20)
 (setq auto-save-timeout 10)
 
-(setq shell-file-name "/bin/zsh")
+(setq shell-file-name "/bin/bash")
 (global-set-key (kbd "C-c z") 'shell)
-
+(global-set-key (kbd "C-c e") 'eval-buffer)
 (global-set-key (kbd "C-c g") 'goto-line)
 (global-set-key (kbd "C-c o") 'occur)
 (global-set-key (kbd "C-c f") 'flush-lines)
@@ -144,6 +143,8 @@
 (require 'fan-org)
 (require 'fan-latex)
 
+(require 'modeline-posn)
+
 (require 'volatile-highlights)
 (volatile-highlights-mode t)
 
@@ -162,8 +163,8 @@
 (change-cursor-mode 1) ; On for overwrite/read-only/input mode
 (toggle-cursor-type-when-idle 1) ; On when idle
 
+(setq auto-indent-on-visit-file t)
 (require 'auto-indent-mode)
-(setq auto-indent-on-visit-file t) ;; If you want auto-indent on for files
 (auto-indent-global-mode)
 
 (require 'goto-chg)
@@ -255,6 +256,9 @@
 (eval-after-load 'ruby-mode
   '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
 
+(add-to-list 'load-path "~/emacs/extension/weibo")
+(require 'weibo)
+(setq oauth-use-curl t)
 
 (autoload 'mew "mew" nil t)
 (autoload 'mew-send "mew" nil t)
