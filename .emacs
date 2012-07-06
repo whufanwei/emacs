@@ -1,9 +1,18 @@
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(auto-indent-next-pair-timer-interval (quote ((latex-mode 1.8852360248565674) (default 0.5))))
+ '(column-number-mode t)
+ '(cua-mode t nil (cua-base))
  '(fringe-mode (quote (nil . 0)) nil (fringe))
  '(org-clock-modeline-total (quote auto))
  '(org-indent-mode-turns-on-hiding-stars t)
  '(org-table-auto-blank-field nil)
  '(scroll-bar-mode nil)
+ '(show-paren-mode t)
+ '(size-indication-mode t)
  '(tool-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -29,13 +38,18 @@
 (setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\(\\|[ \t]\\)\\)[ \t\n]*")
 (setq sentence-end-double-space nil)
 
+
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+
 (show-paren-mode t)
 (column-number-mode 1)
 (size-indication-mode 1)
 (setq enable-recursive-minibuffers t)
 (setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
-(setq default-fill-column 100)
+(setq default-fill-column 70)
 (setq default-major-mode 'org-mode)
 (setq global-font-lock-mode t)
 (setq auto-image-file-mode t)
@@ -43,8 +57,7 @@
 (setq mouse-yank-at-point t)
 (setq visible-bell t)
 (global-visual-line-mode 1)
-(prefer-coding-system 'utf-8)
-
+(setq-default tab-width 2 indent-tabs-mode nil)
 ;; (setq url-using-proxy t)
 ;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
 
@@ -66,11 +79,13 @@
 (setq shell-file-name "/bin/bash")
 (global-set-key (kbd "C-c z") 'shell)
 (global-set-key (kbd "C-c e") 'eval-buffer)
-(global-set-key (kbd "C-c g") 'goto-line)
+(global-set-key (kbd "M-g") 'goto-line)
 (global-set-key (kbd "C-c o") 'occur)
-(global-set-key (kbd "C-c f") 'flush-lines)
+
+;; (global-set-key (kbd "C-c f") 'flush-lines)
 (global-set-key (kbd "C-c k") 'keep-lines)
 (global-set-key [f6] 'replace-regexp)
+(global-set-key (kbd "C-c f") 'fill-individual-paragraphs)
 
 ;; maxima字体设定
 (setq imaxima-fnt-size "huge")
@@ -135,6 +150,41 @@
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
 
+;;(add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/")
+
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "/usr/share/dict/words")
+;; (add-to-list 'ac-dictionary-directories "~/emacs/ac-dict")
+(ac-config-default)
+;; 模糊匹配，Fuzzy Matching
+(define-key ac-mode-map (kbd "M-RET") 'auto-complete)
+;; Show 0.2 second later
+(setq ac-auto-show-menu 0.2)
+(setq-default ac-sources '(ac-source-semantic
+                           ;;ac-source-yasnippet
+                           ac-source-ropemacs
+                           ac-source-symbols
+                           ac-source-variables
+                           ac-source-imenu
+                           ac-source-files-in-current-dir
+                           ac-source-words-in-buffer
+                           ac-source-words-in-all-buffer
+                           ac-source-dictionary
+                           ac-source-functions
+                           ac-source-abbrev
+                           ac-source-filename))
+(setq ac-auto-start 2)
+(setq ac-dwim t)
+(global-auto-complete-mode t)
+;; (global-set-key (kbd "M-/") 'ac-complete-words-in-all-buffer)
+(global-set-key (kbd "C-M-/") 'dabbrev-completion)
+
+(defun ac-expand-fan ()
+  (interactive)
+  (find-file-noselect "~/emacs/ac-dict/tan300")
+  (auto-complete '(ac-source-dictionary ac-source-words-in-all-buffer)))
+(global-set-key (kbd "M-/") 'ac-expand-fan)
+
 ;; ------------------------------------------------------------------
 
 (add-to-list 'load-path "~/emacs/extension" t)
@@ -142,6 +192,20 @@
 (require 'fan)
 (require 'fan-org)
 (require 'fan-latex)
+
+(require 'ethan-wspace)
+(global-ethan-wspace-mode 1)
+(set-default 'ethan-wspace-errors (remove 'tabs ethan-wspace-errors))
+
+(require 'ws-trim)
+(global-ws-trim-mode t)
+(set-default 'ws-trim-level 2)
+(global-set-key (kbd "C-c t") 'ws-trim-buffer)
+
+(require 'deft)
+(setq deft-extension "org")
+(setq deft-text-mode 'org-mode)
+(setq deft-use-filename-as-title t)
 
 (require 'modeline-posn)
 
@@ -180,10 +244,8 @@
 (require 'rainbow-delimiters)
 (global-rainbow-delimiters-mode)
 
-(require 'jump-char)
-(global-set-key (kbd "C-j") 'jump-char-forward)
-;; (global-set-key (kbd "C-S j") 'jump-char-backward)
-(global-set-key [(shift control j)] 'jump-char-backward)
+(require 'ace-jump-mode)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
 
 (autoload 'ack-and-a-half-same "ack-and-a-half" nil t)
 (autoload 'ack-and-a-half "ack-and-a-half" nil t)
@@ -194,6 +256,7 @@
 (defalias 'ack-same 'ack-and-a-half-same)
 (defalias 'ack-find-file 'ack-and-a-half-find-file)
 (defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)
+(global-set-key (kbd "C-c g") 'ack-and-a-half)
 
 (add-to-list 'load-path "~/emacs/helm")
 (require 'helm-config)
@@ -205,29 +268,8 @@
 (global-set-key (kbd "<f9> g") 'helm-do-grep)
 (helm-dired-bindings 1)
 
-(add-to-list 'load-path "~/emacs/auto-complete")
-(require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/dict")
-(ac-config-default)
-;; 模糊匹配，Fuzzy Matching
-(define-key ac-mode-map (kbd "M-RET") 'auto-complete)
-;; Show 0.2 second later
-(setq ac-auto-show-menu 0.2)
-(setq-default ac-sources '(ac-source-yasnippet
-                           ac-source-semantic
-                           ac-source-ropemacs
-                           ac-source-imenu
-			   ac-source-files-in-current-dir
-                           ac-source-words-in-buffer
-                           ac-source-words-in-all-buffer
-                           ac-source-dictionary
-			   ac-source-functions
-                           ac-source-abbrev
-                           ac-source-files-in-current-dir
-                           ac-source-filename))
-(setq ac-auto-start 2)
-(setq ac-dwim t)
-(setq global-auto-complete-mode t)
+;; (add-to-list 'load-path "~/emacs/auto-complete")
+;; (add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/dict")
 
 (add-to-list 'load-path "~/emacs/extension/magit")
 (require 'magit)
@@ -236,19 +278,18 @@
 
 (add-to-list 'load-path "~/emacs/extension/color")
 (require 'color-theme)
-(setq color-theme-is-global t)
 (color-theme-initialize)
+(require 'color-theme-tangotango)
 (color-theme-tangotango)
 
 (add-to-list 'load-path "~/emacs/extension/expand-region")
 (require 'expand-region)
 (global-set-key (kbd "C-=") 'er/expand-region)
 
-
-(add-to-list 'load-path "~/emacs/extension/yasnippet")
-(require 'yasnippet)
-(setq yas/snippet-dirs "~/emacs/extension/yasnippet/snippets")
-(yas/global-mode 1)
+;; (add-to-list 'load-path "~/emacs/extension/yasnippet")
+;; (require 'yasnippet)
+;; (setq yas/snippet-dirs "~/emacs/extension/yasnippet/snippets")
+;; (yas/global-mode 1)
 
 (add-to-list 'load-path "~/emacs/extension/inf-ruby")
 (autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
@@ -276,4 +317,3 @@
       'mew-draft-send-message
       'mew-draft-kill
       'mew-send-hook))
-
