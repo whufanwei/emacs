@@ -32,8 +32,8 @@ datarootdir=${prefix}/share$(null)
 datadir=${datarootdir}$(null)
 exec_prefix=${prefix}$(null)
 libdir=${exec_prefix}/lib$(null)
-previewtexmfdir = /usr/local/texlive/2011/texmf/tex/latex/preview$(null)
-previewdocdir = /usr/local/texlive/2011/texmf/tex/latex/preview$(null)
+previewtexmfdir = /usr/local/texlive/2012/texmf/tex/latex/preview$(null)
+previewdocdir = /usr/local/texlive/2012/texmf/tex/latex/preview$(null)
 TEXMFGEN = preview.sty prauctex.def prauctex.cfg prshowbox.def prshowlabels.def prtracingall.def prtightpage.def prlyx.def prcounters.def prfootnotes.def
 
 DESTDIR=

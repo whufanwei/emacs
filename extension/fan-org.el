@@ -19,16 +19,6 @@
 (setq system-time-locale "C")
 (setq org-agenda-ndays 1)
 
-;; # (defun yas/org-very-safe-expand ()
-;; #   (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
-
-;; # (add-hook 'org-mode-hook
-;; #           (lambda ()
-;; #             (make-variable-buffer-local 'yas/trigger-key)
-;; #             (setq yas/trigger-key [tab])
-;; #             (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
-;; #             (define-key yas/keymap [tab] 'yas/next-field)))
-
 (require 'org-crypt)
 (org-crypt-use-before-save-magic)
 (setq org-tags-exclude-from-inheritance (quote ("crypt")))
@@ -47,45 +37,55 @@
 (global-set-key (kbd "<f9> SPC") 'bh/clock-in-last-task)
 (define-key org-mode-map (kbd "C-k") 'zl-delete-line);删除一行
 
-(require 'org-latex)
-(add-to-list 'org-export-latex-classes
+(require 'ox)
+(require 'ox-latex)
+(add-to-list 'org-latex-classes
+             '("beamer"
+               "\\documentclass\[presentation\]\{beamer\}"
+               ("\\section\{%s\}" . "\\section*\{%s\}")
+               ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+               ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
+(add-to-list 'org-latex-classes
              '("fan-article"
-               "\\documentclass[12pt,a4paper]{article}
-\\usepackage{fontspec}
-\\usepackage{xltxtra,xunicode}
-\\usepackage[CJKnumber,CJKchecksingle,BoldFont]{xeCJK}
-\\defaultfontfeatures{Mapping=tex-text}
-\\setmainfont[Mapping=tex-text]{Times New Roman}
-\\setsansfont[Mapping=tex-text]{Arial}
-\\setmonofont{Consolas}
-\\setCJKmainfont[BoldFont={Adobe Heiti Std},ItalicFont={Adobe Kaiti Std}]{Adobe Song Std}
-\\setCJKsansfont{Adobe Heiti Std}
-\\setCJKmonofont{Adobe Fangsong Std}
-\\XeTeXlinebreakskip = 0pt plus 1pt %1pt左右弹性间距
-\\linespread{1.3}
-\\usepackage{graphicx}
-\\usepackage{geometry}
-\\usepackage{minted}
-\\geometry{a4paper, textwidth=6.5in, textheight=10in,marginparsep=7pt,marginparwidth=.6in}
-\\pagestyle{empty}
-\\usepackage[xetex,bookmarksnumbered=true,bookmarksopen=true,colorlinks=true,citecolor=blue,linkcolor=blue,anchorcolor=green,urlcolor=magenta,breaklinks=true,CJKbookmarks=true,]{hyperref}
-\\title{}
-      [NO-DEFAULT-PACKAGES]
-      [NO-PACKAGES]"
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+               "\\documentclass\[12pt,a4paper\]\{article\}
+\\usepackage\{amsmath\}
+\\usepackage\{mathspec\}
+\\usepackage\{xltxtra,xunicode\}
+\\usepackage\{unicode-math\}
+\\usepackage\[CJKnumber,CJKchecksingle,BoldFont\]\{xeCJK\}
+\\defaultfontfeatures\{Mapping=tex-text\}
+\\setmainfont\[Mapping=tex-text\]\{Palatino Linotype\}
+\\setsansfont\[Mapping=tex-text\]\{Palatino Linotype\}
+\\setmonofont\{Consolas\}
+\\setCJKmainfont\[BoldFont=\{Adobe Heiti Std\},ItalicFont=\{Adobe Kaiti Std\}\]\{Adobe Song Std\}
+\\setCJKsansfont\{Adobe Heiti Std\}
+\\setCJKmonofont\{Adobe Fangsong Std\}
+\\linespread\{1.3\}
+\\setmathfont\{Asana Math\}
+\\setmathfont\[range=\{\\mathit,\\mathup\}\]\{Asana Math\}
+\\usepackage\{graphicx\}
+\\usepackage\{geometry\}
+\\usepackage\{minted\}
+\\geometry\{a4paper, textwidth=6.5in, textheight=10in,marginparsep=7pt,marginparwidth=.6in\}
+\\pagestyle\{empty\}
+\\usepackage\[xetex,bookmarksnumbered=true,bookmarksopen=true,colorlinks=true,citecolor=blue,linkcolor=blue,anchorcolor=green,urlcolor=magenta,breaklinks=true,CJKbookmarks=true,\]\{hyperref\}
+\\title\{\}
+      \[NO-DEFAULT-PACKAGES\]
+      \[NO-PACKAGES\]"
+               ("\\section\{%s\}" . "\\section*\{%s\}")
+               ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+               ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")
+               ("\\paragraph\{%s\}" . "\\paragraph*\{%s\}")
+               ("\\subparagraph\{%s\}" . "\\subparagraph*\{%s\}")))
 
-(setq org-export-latex-listings 'minted)
-(add-to-list 'org-export-latex-packages-alist '("" "minted"))
-(setq org-export-latex-minted-options
+(setq org-latex-listings 'minted)
+(add-to-list 'org-latex-packages-alist '("" "minted"))
+(setq org-latex-minted-options
       '(("frame" "lines")
         ("fontsize" "\\scriptsize")
         ("linenos" "")))
 
-(setq org-latex-to-pdf-process
+(setq org-latex-pdf-process
       '("xelatex -shell-escape -interaction nonstopmode %f"
         "xelatex -shell-escape -interaction nonstopmode %f"
         "xelatex -shell-escape -interaction nonstopmode %f")) ;; for multiple passes

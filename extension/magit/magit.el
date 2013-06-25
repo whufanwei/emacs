@@ -46,7 +46,7 @@
 ;;   - Peter J Weisberg
 ;;   - Yann Hodique
 ;;   - Rémi Vanicat
-;; Version: @GIT_DEV_VERSION@
+;; Version: 1.2.0
 ;; Keywords: tools
 
 ;;
@@ -651,6 +651,9 @@ operation after commit).")
     (define-key map (kbd "z") 'magit-key-mode-popup-stashing)
     map))
 
+(eval-after-load 'dired-x
+  '(define-key magit-status-mode-map [remap dired-jump] 'magit-dired-jump))
+
 (defvar magit-log-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd ".") 'magit-mark-item)
@@ -677,7 +680,7 @@ operation after commit).")
 (defvar magit-bug-report-url
   "http://github.com/magit/magit/issues")
 
-(defconst magit-version "@GIT_DEV_VERSION@"
+(defconst magit-version "1.2.0"
   "The version of Magit that you're using.")
 
 (defun magit-bug-report (str)
@@ -2154,17 +2157,29 @@ function can be enriched by magit extension like magit-topgit and magit-svn"
   "Checks if git/ssh asks for a password and ask the user for it."
   (let (ask)
     (cond ((or (string-match "^Enter passphrase for key '\\\(.*\\\)': $" string)
-               (string-match "^\\\(.*\\\)'s password:" string))
+               (string-match "^\\\(.*\\\)'s password:" string)
+               (string-match "^Password for '\\\(.*\\\)':" string))
            (setq ask (format "Password for '%s': " (match-string 1 string))))
           ((string-match "^[pP]assword:" string)
            (setq ask "Password:")))
     (when ask
       (process-send-string proc (concat (read-passwd ask nil) "\n")))))
 
+(defun magit-username (proc string)
+  "Checks if git asks for a username and ask the user for it."
+  (when (string-match "^Username for '\\\(.*\\\)':" string)
+    (process-send-string proc
+                         (concat
+                          (read-string (format "Username for '%s': "
+                                               (match-string 1 string))
+                                       nil nil (user-login-name))
+                          "\n"))))
+
 (defun magit-process-filter (proc string)
   (save-current-buffer
     (set-buffer (process-buffer proc))
     (let ((inhibit-read-only t))
+      (magit-username proc string)
       (magit-password proc string)
       (goto-char (process-mark proc))
       ;; Find last ^M in string.  If one was found, ignore everything
@@ -3545,7 +3560,7 @@ FULLY-QUALIFIED-NAME is non-nil."
 (defun magit-init (dir)
   "Initialize git repository in the DIR directory."
   (interactive (list (read-directory-name "Directory for Git repository: ")))
-  (let* ((dir (expand-file-name dir))
+  (let* ((dir (file-name-as-directory (expand-file-name dir)))
          (topdir (magit-get-top-dir dir)))
     (when (or (not topdir)
               (yes-or-no-p
@@ -3557,7 +3572,8 @@ FULLY-QUALIFIED-NAME is non-nil."
       (unless (file-directory-p dir)
         (and (y-or-n-p (format "Directory %s does not exists.  Create it? " dir))
              (make-directory dir)))
-      (magit-run* (list magit-git-executable "init" dir)))))
+      (let ((default-directory dir))
+        (magit-run* (list magit-git-executable "init"))))))
 
 (define-derived-mode magit-status-mode magit-mode "Magit"
   "Mode for looking at git status.
@@ -4550,9 +4566,9 @@ This means that the eventual commit does 'git commit --allow-empty'."
     (setq magit-pre-log-edit-window-configuration
           (current-window-configuration))
     (pop-to-buffer buf)
+    (setq default-directory dir)
     (when (file-exists-p (concat (magit-git-dir) "MERGE_MSG"))
       (insert-file-contents (concat (magit-git-dir) "MERGE_MSG")))
-    (setq default-directory dir)
     (magit-log-edit-mode)
     (make-local-variable 'magit-buffer-internal)
     (setq magit-buffer-internal magit-buf)
@@ -5054,7 +5070,7 @@ restore the window state that was saved before ediff was called."
       (magit-git-section 'diffbuf
                          (magit-rev-range-describe range "Changes")
                          'magit-wash-diffs
-                         "diff" (magit-diff-U-arg) args))))
+                         "diff" (magit-diff-U-arg) args "--"))))
 
 (define-derived-mode magit-diff-mode magit-mode "Magit Diff"
   "Mode for looking at a git diff.
@@ -5181,7 +5197,7 @@ the current git repository."
   (let ((topdir (expand-file-name
                  (magit-get-top-dir (or (file-name-directory filename)
                                         default-directory))))
-        (file (expand-file-name filename)))
+        (file (file-truename filename)))
     (when (and (not (string= topdir ""))
                ;; FILE must start with the git repository path
                (zerop (string-match-p (concat "\\`" topdir) file)))
@@ -5289,9 +5305,14 @@ values (such as wildcards) that might be of interest.
 
 If LOCAL is nil, the `.gitignore' file is updated.
 Otherwise, it is `.git/info/exclude'."
-  (let ((ignore-file (if local (concat (magit-git-dir) "info/exclude") ".gitignore")))
+  (let* ((local-ignore-dir (concat (magit-git-dir) "info/"))
+         (ignore-file (if local
+                          (concat local-ignore-dir "exclude")
+                        ".gitignore")))
     (if edit
       (setq file (magit-ignore-modifiable-file file edit)))
+    (if (and local (not (file-exists-p local-ignore-dir)))
+        (make-directory local-ignore-dir t))
     (with-temp-buffer
       (when (file-exists-p ignore-file)
         (insert-file-contents ignore-file))
@@ -5433,6 +5454,22 @@ The name of the change log file is set by variable change-log-default-name."
   (interactive)
   (magit-visiting-file-item (call-interactively 'add-change-log-entry-other-window)))
 
+(eval-after-load 'dired-x
+  '(defun magit-dired-jump (&optional other-window)
+    "Visit current item.
+With a prefix argument, visit in other window."
+    (interactive "P")
+    (require 'dired-x)
+    (magit-section-action (item info "dired-jump")
+      ((untracked file)
+       (dired-jump other-window (file-truename info)))
+      ((diff)
+       (dired-jump other-window (file-truename (magit-diff-item-file item))))
+      ((hunk)
+       (dired-jump other-window
+                   (file-truename (magit-diff-item-file
+                                   (magit-hunk-item-diff item))))))))
+
 (defun magit-visit-file-item (&optional other-window)
   "Visit current file associated with item.
 With a prefix argument, visit in other window."
@@ -5572,7 +5609,8 @@ Return values:
          (commit (and (member 'commit (magit-section-context-type section))
                       (magit-section-info section)))
          (old-editor (getenv "GIT_EDITOR")))
-    (setenv "GIT_EDITOR" (locate-file "emacsclient" exec-path))
+    (setenv "GIT_EDITOR" (concat (locate-file "emacsclient" exec-path)
+                                 " -s " server-name))
     (unwind-protect
         (magit-run-git-async "rebase" "-i"
                              (or (and commit (concat commit "^"))
@@ -5609,14 +5647,13 @@ These are the branch names with the remote name stripped."
 (defvar magit-branches-buffer-name "*magit-branches*")
 
 (defun magit--is-branch-at-point-remote ()
-  "Return t if the branch at point is a remote tracking branch"
+  "Return non-nil if the branch at point is a remote tracking branch"
   (magit-remote-part-of-branch (magit--branch-name-at-point)))
 
 (defun magit-remote-part-of-branch (branch)
   (when (string-match-p "^\\(?:refs/\\)?remotes\\/" branch)
     (loop for remote in (magit-git-lines "remote")
-          until (string-match-p (format "^\\(?:refs/\\)?remotes\\/%s\\/" (regexp-quote remote)) branch)
-          finally return remote)))
+          when (string-match-p (format "^\\(?:refs/\\)?remotes\\/%s\\/" (regexp-quote remote)) branch) return remote)))
 
 (defun magit-branch-no-remote (branch)
   (let ((remote (magit-remote-part-of-branch branch)))
@@ -5951,7 +5988,8 @@ With a prefix arg, do a submodule update --init"
 layer. This can be added to `magit-mode-hook' for example"
   (dolist (ext (magit-get-all "magit.extension"))
     (let ((sym (intern (format "magit-%s-mode" ext))))
-      (when (fboundp sym)
+      (when (and (fboundp sym)
+                 (not (eq sym 'magit-wip-save-mode)))
         (funcall sym 1)))))
 
 (provide 'magit)

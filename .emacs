@@ -3,10 +3,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(auto-indent-next-pair-timer-interval (quote ((latex-mode 1.8852360248565674) (default 0.5))))
  '(column-number-mode t)
  '(cua-mode t nil (cua-base))
  '(fringe-mode (quote (nil . 0)) nil (fringe))
+ '(indicate-empty-lines t)
+ '(org-clock-mode-line-total (quote auto))
  '(org-clock-modeline-total (quote auto))
  '(org-indent-mode-turns-on-hiding-stars t)
  '(org-table-auto-blank-field nil)
@@ -14,12 +15,18 @@
  '(show-paren-mode t)
  '(size-indication-mode t)
  '(tool-bar-mode nil))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#2e3434" :foreground "#eeeeec" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 181 :width normal :foundry "unknown" :family "Ubuntu Mono")))))
+ '(default ((t (:family "Consolas" :foundry "microsoft" :slant normal :weight normal :height 165 :width normal)))))
+
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font (frame-parameter nil 'font)
+                    charset
+                    (font-spec :family "WenQuanYi Micro Hei Mono" :size 24)))
 
 ;;M-x  eval-last-sexp 使.emacs中光标前的那一条语句立刻生效。
 ;;M-x  eval-region   使.emacs中选中的region中的语句立刻生效。
@@ -38,11 +45,9 @@
 (setq sentence-end "\\([。！？]\\|……\\|[.?!][]\"')}]*\\(\\|[ \t]\\)\\)[ \t\n]*")
 (setq sentence-end-double-space nil)
 
-
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
-
 (show-paren-mode t)
 (column-number-mode 1)
 (size-indication-mode 1)
@@ -86,10 +91,8 @@
 (global-set-key (kbd "C-c k") 'keep-lines)
 (global-set-key [f6] 'replace-regexp)
 (global-set-key (kbd "C-c f") 'fill-individual-paragraphs)
-
-;; maxima字体设定
-(setq imaxima-fnt-size "huge")
-(setq imaxima-use-maxima-mode-flag t)
+(global-set-key (kbd "C-c j") 'join-line)
+(global-set-key (kbd "C-h a") 'apropos)
 
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
@@ -127,9 +130,9 @@
 
 ;; 实现程序变量得自动对齐
 (require 'align)
-(global-set-key (kbd "C-x j") 'align-regexp)
+(global-set-key (kbd "C-c \\") 'align-regexp)
 
-(require 'ess-site)
+;; (require 'ess-site)
 
 ;; buffer名称唯一
 (require 'uniquify)
@@ -145,13 +148,100 @@
 (require 'hl-line)
 (global-hl-line-mode t)
 
-(require 'python)
-(autoload 'python-mode "python-mode" "Python Mode." t)
-(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
-(add-to-list 'interpreter-mode-alist '("python" . python-mode))
+;; ------------------------------------------------------------------
 
-;;(add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/")
+(add-to-list 'load-path "~/emacs/extension" t)
 
+(require 'fan)
+(require 'fan-org)
+(require 'fan-latex)
+
+(add-to-list 'custom-theme-load-path "~/emacs/color" t)
+(load-theme 'tangotango t)
+
+;; (require 'ethan-wspace)
+;; (global-ethan-wspace-mode 1)
+;; (set-default 'ethan-wspace-errors (remove 'tabs ethan-wspace-errors))
+(require 'ack-and-a-half)
+(defalias 'ack 'ack-and-a-half)
+(defalias 'ack-same 'ack-and-a-half-same)
+(defalias 'ack-find-file 'ack-and-a-half-find-file)
+(defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)
+
+(require 'ido-ubiquitous)
+
+(require 'elisp-slime-nav)
+
+(require 'smex)
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
+
+;; (require 'ws-trim)
+;; (global-ws-trim-mode t)
+;; (set-default 'ws-trim-level 2)
+;; (global-set-key (kbd "C-c t") 'ws-trim-buffer)
+
+;; (require 'deft)
+;; (setq deft-extension "org")
+;; (setq deft-text-mode 'org-mode)
+;; (setq deft-use-filename-as-title t)
+
+(require 'cal-china-x)
+(setq mark-holidays-in-calendar t)
+(setq cal-china-x-priority1-holidays cal-china-x-chinese-holidays)
+(setq calendar-holidays cal-china-x-priority1-holidays)
+
+(require 'projectile)
+(projectile-global-mode)
+
+;; (require 'cursor-chg)  ; Load this library
+;; (change-cursor-mode 1) ; On for overwrite/read-only/input mode
+;; (toggle-cursor-type-when-idle 1) ; On when idle
+
+(setq auto-indent-on-visit-file t)
+(require 'auto-indent-mode)
+;; (auto-indent-global-mode)
+
+;; (require 'goto-chg)
+;; (global-set-key [f11] 'goto-last-change)
+
+;; (require 'undo-tree)
+
+(require 'rainbow-delimiters)
+(global-rainbow-delimiters-mode)
+
+(require 'ace-jump-mode)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+
+(require 'wrap-region)
+(wrap-region-mode t)
+
+(add-to-list 'load-path "~/emacs/extension/magit")
+(require 'magit)
+(global-set-key [f7] 'magit-status)
+
+(add-to-list 'load-path "~/emacs/extension/smartparens")
+(require 'smartparens-config)
+(require 'smartparens-latex)
+(smartparens-global-mode t)
+
+(add-to-list 'load-path "~/emacs/extension/expand-region")
+(require 'expand-region)
+(global-set-key (kbd "C-=") 'er/expand-region)
+
+(add-to-list 'load-path "~/emacs/extension/multiple-cursors")
+(require 'multiple-cursors)
+(global-set-key (kbd "C-o") 'mc/edit-lines)
+
+(require 'diminish)
+(diminish 'wrap-region-mode)
+(diminish 'projectile-mode)
+(eval-after-load 'elisp-slime-nav '(diminish 'elisp-slime-nav-mode))
+(add-hook 'emacs-lisp-mode-hook 
+          (lambda()
+            (setq mode-name "EL"))) 
+
+(add-to-list 'load-path "~/emacs/extension/auto-complete")
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "/usr/share/dict/words")
 ;; (add-to-list 'ac-dictionary-directories "~/emacs/ac-dict")
@@ -163,7 +253,6 @@
 (setq-default ac-sources '(ac-source-semantic
                            ;;ac-source-yasnippet
                            ac-source-ropemacs
-                           ac-source-symbols
                            ac-source-variables
                            ac-source-imenu
                            ac-source-files-in-current-dir
@@ -176,144 +265,11 @@
 (setq ac-auto-start 2)
 (setq ac-dwim t)
 (global-auto-complete-mode t)
-;; (global-set-key (kbd "M-/") 'ac-complete-words-in-all-buffer)
-(global-set-key (kbd "C-M-/") 'dabbrev-completion)
+(global-set-key (kbd "M-/") 'ac-complete-words-in-all-buffer)
+;; (global-set-key (kbd "C-M-/") 'dabbrev-completion)
 
-(defun ac-expand-fan ()
-  (interactive)
-  (find-file-noselect "~/emacs/ac-dict/tan300")
-  (auto-complete '(ac-source-dictionary ac-source-words-in-all-buffer)))
-(global-set-key (kbd "M-/") 'ac-expand-fan)
+;; (setq ispell-program-name "aspell") ; could be ispell as well, depending on your preferences
+;; (setq ispell-dictionary "english") ; y language your spell-checking program supports
 
-;; ------------------------------------------------------------------
-
-(add-to-list 'load-path "~/emacs/extension" t)
-
-(require 'fan)
-(require 'fan-org)
-(require 'fan-latex)
-
-(require 'ethan-wspace)
-(global-ethan-wspace-mode 1)
-(set-default 'ethan-wspace-errors (remove 'tabs ethan-wspace-errors))
-
-(require 'ws-trim)
-(global-ws-trim-mode t)
-(set-default 'ws-trim-level 2)
-(global-set-key (kbd "C-c t") 'ws-trim-buffer)
-
-(require 'deft)
-(setq deft-extension "org")
-(setq deft-text-mode 'org-mode)
-(setq deft-use-filename-as-title t)
-
-(require 'modeline-posn)
-
-(require 'volatile-highlights)
-(volatile-highlights-mode t)
-
-(require 'highlight-symbol)
-(global-set-key (kbd "<f9> h") 'highlight-symbol-at-point)
-(global-set-key (kbd "<f9> n") 'highlight-symbol-next)
-;; (global-set-key (kbd "<f9> r") 'highlight-symbol-query-replace)
-(global-set-key (kbd "<f9> p") 'highlight-symbol-prev)
-
-(require 'cal-china-x)
-(setq mark-holidays-in-calendar t)
-(setq cal-china-x-priority1-holidays cal-china-x-chinese-holidays)
-(setq calendar-holidays cal-china-x-priority1-holidays)
-
-(require 'cursor-chg)  ; Load this library
-(change-cursor-mode 1) ; On for overwrite/read-only/input mode
-(toggle-cursor-type-when-idle 1) ; On when idle
-
-(setq auto-indent-on-visit-file t)
-(require 'auto-indent-mode)
-(auto-indent-global-mode)
-
-(require 'goto-chg)
-(global-set-key [f11] 'goto-last-change)
-
-(require 'undo-tree)
-
-(require 'ediff+)
-
-(require 'textmate)
-(tm/initialize)
-
-(require 'rainbow-delimiters)
-(global-rainbow-delimiters-mode)
-
-(require 'ace-jump-mode)
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
-
-(autoload 'ack-and-a-half-same "ack-and-a-half" nil t)
-(autoload 'ack-and-a-half "ack-and-a-half" nil t)
-(autoload 'ack-and-a-half-find-file-same "ack-and-a-half" nil t)
-(autoload 'ack-and-a-half-find-file "ack-and-a-half" nil t)
-;; Create shorter aliases
-(defalias 'ack 'ack-and-a-half)
-(defalias 'ack-same 'ack-and-a-half-same)
-(defalias 'ack-find-file 'ack-and-a-half-find-file)
-(defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)
-(global-set-key (kbd "C-c g") 'ack-and-a-half)
-
-(add-to-list 'load-path "~/emacs/helm")
-(require 'helm-config)
-(global-set-key (kbd "C-c h") 'helm-mini)
-(helm-mode 1)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
-(global-set-key (kbd "C-c y") 'helm-show-kill-ring)
-(global-set-key (kbd "<f9> l") 'helm-locate)
-(global-set-key (kbd "<f9> g") 'helm-do-grep)
-(helm-dired-bindings 1)
-
-;; (add-to-list 'load-path "~/emacs/auto-complete")
-;; (add-to-list 'ac-dictionary-directories "~/emacs/auto-complete/dict")
-
-(add-to-list 'load-path "~/emacs/extension/magit")
-(require 'magit)
-(global-set-key [f7] 'magit-status)
-
-
-(add-to-list 'load-path "~/emacs/extension/color")
-(require 'color-theme)
-(color-theme-initialize)
-(require 'color-theme-tangotango)
-(color-theme-tangotango)
-
-(add-to-list 'load-path "~/emacs/extension/expand-region")
-(require 'expand-region)
-(global-set-key (kbd "C-=") 'er/expand-region)
-
-;; (add-to-list 'load-path "~/emacs/extension/yasnippet")
-;; (require 'yasnippet)
-;; (setq yas/snippet-dirs "~/emacs/extension/yasnippet/snippets")
-;; (yas/global-mode 1)
-
-(add-to-list 'load-path "~/emacs/extension/inf-ruby")
-(autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
-(autoload 'inf-ruby-keys "inf-ruby" "" t)
-(eval-after-load 'ruby-mode
-  '(add-hook 'ruby-mode-hook 'inf-ruby-keys))
-
-(add-to-list 'load-path "~/emacs/extension/weibo")
-(require 'weibo)
-(setq oauth-use-curl t)
-
-(autoload 'mew "mew" nil t)
-(autoload 'mew-send "mew" nil t)
-;; Optional setup (Read Mail menu for Emacs 21):
-(if (boundp 'read-mail-command)
-    (setq read-mail-command 'mew))
-;; Optional setup (e.g. C-xm for sending a message):
-(autoload 'mew-user-agent-compose "mew" nil t)
-(if (boundp 'mail-user-agent)
-    (setq mail-user-agent 'mew-user-agent))
-(if (fboundp 'define-mail-user-agent)
-    (define-mail-user-agent
-      'mew-user-agent
-      'mew-user-agent-compose
-      'mew-draft-send-message
-      'mew-draft-kill
-      'mew-send-hook))
+;; (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+;; (add-hook 'LaTeX-mode-hook 'flyspell-buffer)

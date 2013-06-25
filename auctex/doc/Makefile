@@ -41,8 +41,8 @@ TEXI2PDF=:
 MKINSTALLDIRS = ../mkinstalldirs
 DVIPS=/usr/local/bin/dvips
 PERL=/usr/bin/perl
-AUCTEXDATE=2010-02-21
-AUCTEXVERSION=11.86
+AUCTEXDATE=2012-11-30
+AUCTEXVERSION=11.87
 PACKAGE_TARNAME=auctex
 
 AUCTEXTEXIFILES = auctex.texi install.texi wininstall.texi intro.texi \

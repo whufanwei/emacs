@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (turn-on-bib-cite bib-cite-minor-mode) "bib-cite"
-;;;;;;  "bib-cite.el" (18341 54637))
+;;;;;;  "bib-cite.el" (18341 29438))
 ;;; Generated autoloads from bib-cite.el
 
 (autoload 'bib-cite-minor-mode "bib-cite" "\
@@ -22,7 +22,7 @@ Unconditionally turn on Bib Cite mode.
 
 ;;;***
 
-;;;### (autoloads (context-mode) "context" "context.el" (19318 46167))
+;;;### (autoloads (context-mode) "context" "context.el" (19707 39012))
 ;;; Generated autoloads from context.el
 
 (defalias 'ConTeXt-mode 'context-mode)
@@ -42,7 +42,7 @@ of context-mode-hook.
 ;;;***
 
 ;;;### (autoloads (context-en-mode) "context-en" "context-en.el"
-;;;;;;  (18541 18440))
+;;;;;;  (19617 60454))
 ;;; Generated autoloads from context-en.el
 
 (autoload 'context-en-mode "context-en" "\
@@ -60,7 +60,7 @@ of context-mode-hook.
 ;;;***
 
 ;;;### (autoloads (context-nl-mode) "context-nl" "context-nl.el"
-;;;;;;  (18489 3127))
+;;;;;;  (19617 60466))
 ;;; Generated autoloads from context-nl.el
 
 (autoload 'context-nl-mode "context-nl" "\
@@ -78,7 +78,7 @@ of context-mode-hook.
 ;;;***
 
 ;;;### (autoloads (font-latex-setup) "font-latex" "font-latex.el"
-;;;;;;  (19254 11585))
+;;;;;;  (20561 23962))
 ;;; Generated autoloads from font-latex.el
 
 (autoload 'font-latex-setup "font-latex" "\
@@ -89,7 +89,7 @@ Setup this buffer for LaTeX font-lock.  Usually called from a hook.
 ;;;***
 
 ;;;### (autoloads (docTeX-mode TeX-latex-mode BibTeX-auto-store)
-;;;;;;  "latex" "latex.el" (19180 28128))
+;;;;;;  "latex" "latex.el" (20659 26358))
 ;;; Generated autoloads from latex.el
 
 (autoload 'BibTeX-auto-store "latex" "\
@@ -127,7 +127,7 @@ runs the hooks in `docTeX-mode-hook'.
 ;;;***
 
 ;;;### (autoloads (multi-prompt-key-value multi-prompt) "multi-prompt"
-;;;;;;  "multi-prompt.el" (18915 28236))
+;;;;;;  "multi-prompt.el" (18915 6636))
 ;;; Generated autoloads from multi-prompt.el
 
 (autoload 'multi-prompt "multi-prompt" "\
@@ -156,9 +156,40 @@ The return value is the string as entered in the minibuffer.
 
 ;;;***
 
-;;;### (autoloads (TeX-submit-bug-report ams-tex-mode TeX-auto-generate-global
-;;;;;;  TeX-auto-generate TeX-plain-tex-mode TeX-tex-mode) "tex"
-;;;;;;  "tex.el" (19327 63823))
+;;;### (autoloads (ams-tex-mode TeX-plain-tex-mode) "plain-tex" "plain-tex.el"
+;;;;;;  (19707 38960))
+;;; Generated autoloads from plain-tex.el
+
+(autoload 'TeX-plain-tex-mode "plain-tex" "\
+Major mode in AUCTeX for editing plain TeX files.
+See info under AUCTeX for documentation.
+
+Special commands:
+\\{plain-TeX-mode-map}
+
+Entering `plain-tex-mode' calls the value of `text-mode-hook',
+then the value of `TeX-mode-hook', and then the value
+of plain-TeX-mode-hook.
+
+\(fn)" t nil)
+
+(autoload 'ams-tex-mode "plain-tex" "\
+Major mode in AUCTeX for editing AmS-TeX files.
+See info under AUCTeX for documentation.
+
+Special commands:
+\\{AmSTeX-mode-map}
+
+Entering AmS-tex-mode calls the value of `text-mode-hook',
+then the value of `TeX-mode-hook', and then the value
+of `AmS-TeX-mode-hook'.
+
+\(fn)" t nil)
+
+;;;***
+
+;;;### (autoloads (TeX-submit-bug-report TeX-auto-generate-global
+;;;;;;  TeX-auto-generate TeX-tex-mode) "tex" "tex.el" (20664 41962))
 ;;; Generated autoloads from tex.el
 
 (autoload 'TeX-tex-mode "tex" "\
@@ -175,19 +206,6 @@ The algorithm is as follows:
 
 \(fn)" t nil)
 
-(autoload 'TeX-plain-tex-mode "tex" "\
-Major mode in AUCTeX for editing plain TeX files.
-See info under AUCTeX for documentation.
-
-Special commands:
-\\{plain-TeX-mode-map}
-
-Entering `plain-tex-mode' calls the value of `text-mode-hook',
-then the value of `TeX-mode-hook', and then the value
-of plain-TeX-mode-hook.
-
-\(fn)" t nil)
-
 (autoload 'TeX-auto-generate "tex" "\
 Generate style file for TEX and store it in AUTO.
 If TEX is a directory, generate style files for all files in the directory.
@@ -196,19 +214,6 @@ If TEX is a directory, generate style files for all files in the directory.
 
 (autoload 'TeX-auto-generate-global "tex" "\
 Create global auto directory for global TeX macro definitions.
-
-\(fn)" t nil)
-
-(autoload 'ams-tex-mode "tex" "\
-Major mode in AUCTeX for editing AmS-TeX files.
-See info under AUCTeX for documentation.
-
-Special commands:
-\\{AmSTeX-mode-map}
-
-Entering AmS-tex-mode calls the value of `text-mode-hook',
-then the value of `TeX-mode-hook', and then the value
-of `AmS-TeX-mode-hook'.
 
 \(fn)" t nil)
 
@@ -226,7 +231,7 @@ information about your AUCTeX version and AUCTeX configuration.
 ;;;***
 
 ;;;### (autoloads (LaTeX-install-toolbar TeX-install-toolbar) "tex-bar"
-;;;;;;  "tex-bar.el" (18580 49499))
+;;;;;;  "tex-bar.el" (18580 27900))
 ;;; Generated autoloads from tex-bar.el
 
 (autoload 'TeX-install-toolbar "tex-bar" "\
@@ -241,7 +246,7 @@ Install toolbar buttons for LaTeX mode.
 
 ;;;***
 
-;;;### (autoloads nil "tex-fold" "tex-fold.el" (19227 40177))
+;;;### (autoloads nil "tex-fold" "tex-fold.el" (19886 59672))
 ;;; Generated autoloads from tex-fold.el
  (autoload 'TeX-fold-mode "tex-fold" "Minor mode for hiding and revealing macros and environments." t)
 
@@ -250,7 +255,7 @@ Install toolbar buttons for LaTeX mode.
 ;;;***
 
 ;;;### (autoloads (tex-font-setup) "tex-font" "tex-font.el" (18341
-;;;;;;  54636))
+;;;;;;  29436))
 ;;; Generated autoloads from tex-font.el
 
 (autoload 'tex-font-setup "tex-font" "\
@@ -260,8 +265,8 @@ Setup font lock support for TeX.
 
 ;;;***
 
-;;;### (autoloads (TeX-texinfo-mode) "tex-info" "tex-info.el" (18903
-;;;;;;  48810))
+;;;### (autoloads (TeX-texinfo-mode) "tex-info" "tex-info.el" (20658
+;;;;;;  63518))
 ;;; Generated autoloads from tex-info.el
 
 (defalias 'Texinfo-mode 'texinfo-mode)
@@ -280,7 +285,7 @@ value of `Texinfo-mode-hook'.
 ;;;***
 
 ;;;### (autoloads (japanese-latex-mode japanese-plain-tex-mode) "tex-jp"
-;;;;;;  "tex-jp.el" (18768 5174))
+;;;;;;  "tex-jp.el" (20588 15344))
 ;;; Generated autoloads from tex-jp.el
 
 (autoload 'japanese-plain-tex-mode "tex-jp" "\
@@ -298,7 +303,7 @@ Set `japanese-TeX-mode' to t, and enter `TeX-latex-mode'.
 ;;;***
 
 ;;;### (autoloads (texmathp-match-switch texmathp) "texmathp" "texmathp.el"
-;;;;;;  (18489 3128))
+;;;;;;  (18488 47064))
 ;;; Generated autoloads from texmathp.el
 
 (autoload 'texmathp "texmathp" "\
@@ -318,7 +323,7 @@ Limit searched to BOUND.
 
 ;;;***
 
-;;;### (autoloads nil "toolbar-x" "toolbar-x.el" (18580 49487))
+;;;### (autoloads nil "toolbar-x" "toolbar-x.el" (18580 27888))
 ;;; Generated autoloads from toolbar-x.el
  (autoload 'toolbarx-install-toolbar "toolbar-x")
 

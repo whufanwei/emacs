@@ -201,7 +201,7 @@ frames with exactly two windows."
 	(if (equal m-begin old-pos)
 	    (goto-char m-end)
 	  )))))
-(global-set-key (kbd "C-o") 'joseph-jump-to-space-forward);;跳到下一处空格
+;; (global-set-key (kbd "C-o") 'joseph-jump-to-space-forward);;跳到下一处空格
 
 ;; 搜索光标下字符串
 (defun my-isearch-yank-word-or-char-from-beginning ()
