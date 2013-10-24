@@ -2,7 +2,6 @@
 ;;
 ;; Copyright (c) 2012 欧阳威
 ;;
-;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; Version: 0.1
 ;; Keywords: funtion
 

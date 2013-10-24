@@ -54,7 +54,7 @@
 (setq enable-recursive-minibuffers t)
 (setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
-(setq default-fill-column 70)
+(setq default-fill-column 80)
 (setq default-major-mode 'org-mode)
 (setq global-font-lock-mode t)
 (setq auto-image-file-mode t)
@@ -68,7 +68,7 @@
 
 ;; revert buffers automatically when underlying files are changed externally
 (global-auto-revert-mode t)
-
+(auto-compression-mode t)
 (setq inhibit-startup-echo-area-message t)
 (setq inhibit-startup-message t)
 
@@ -93,6 +93,7 @@
 (global-set-key (kbd "C-c f") 'fill-individual-paragraphs)
 (global-set-key (kbd "C-c j") 'join-line)
 (global-set-key (kbd "C-h a") 'apropos)
+(global-set-key (kbd "RET") 'reindent-then-newline-and-indent)
 
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
@@ -145,8 +146,28 @@
 (setq-default save-place t)
 (desktop-save-mode 1)
 
+
 (require 'hl-line)
 (global-hl-line-mode t)
+
+(require 'recentf)
+(global-set-key (kbd "C-x C-r") 'ido-recentf-open)
+(setq recentf-save-file (concat user-emacs-directory ".recentf"))
+(recentf-mode t)
+(setq recentf-max-saved-items 50)
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+      (message "Opening file...")
+    (message "Aborting")))
+
+;; (setq ido-enable-prefix nil)
+;; (setq ido-enable-case nil)
+;; (setq ido-enable-flex-matching t)
+;; (setq ido-everywhere t)
+;; (ido-mode t)
+;; (icomplete-mode t)
 
 ;; ------------------------------------------------------------------
 
@@ -167,6 +188,7 @@
 (defalias 'ack-same 'ack-and-a-half-same)
 (defalias 'ack-find-file 'ack-and-a-half-find-file)
 (defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)
+
 
 (require 'ido-ubiquitous)
 
@@ -193,6 +215,14 @@
 
 (require 'projectile)
 (projectile-global-mode)
+(setq projectile-enable-caching t)
+
+(require 'markdown-mode)
+(autoload 'markdown-mode "markdown-mode"
+  "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 
 ;; (require 'cursor-chg)  ; Load this library
 ;; (change-cursor-mode 1) ; On for overwrite/read-only/input mode
@@ -225,6 +255,64 @@
 (require 'smartparens-latex)
 (smartparens-global-mode t)
 
+(require 'smartparens-config)
+(setq sp-autoskip-closing-pair 'always)
+(setq sp-navigate-close-if-unbalanced t)
+(smartparens-global-mode t)
+
+;; highlights matching pairs
+(show-smartparens-global-mode t)
+
+;; keybinding management
+(define-key sp-keymap (kbd "M-s f") 'sp-forward-sexp)
+(define-key sp-keymap (kbd "M-s b") 'sp-backward-sexp)
+
+(define-key sp-keymap (kbd "M-s d") 'sp-down-sexp)
+(define-key sp-keymap (kbd "M-s D") 'sp-backward-down-sexp)
+(define-key sp-keymap (kbd "M-s a") 'sp-beginning-of-sexp)
+(define-key sp-keymap (kbd "M-s e") 'sp-end-of-sexp)
+
+(define-key sp-keymap (kbd "M-s u") 'sp-up-sexp)
+;; (define-key emacs-lisp-mode-map (kbd ")") 'sp-up-sexp)
+(define-key sp-keymap (kbd "M-s U") 'sp-backward-up-sexp)
+(define-key sp-keymap (kbd "M-s t") 'sp-transpose-sexp)
+
+(define-key sp-keymap (kbd "M-s n") 'sp-next-sexp)
+(define-key sp-keymap (kbd "M-s p") 'sp-previous-sexp)
+
+(define-key sp-keymap (kbd "M-s k") 'sp-kill-sexp)
+(define-key sp-keymap (kbd "M-s w") 'sp-copy-sexp)
+
+(define-key sp-keymap (kbd "M-s s") 'sp-forward-slurp-sexp)
+(define-key sp-keymap (kbd "M-s r") 'sp-forward-barf-sexp)
+(define-key sp-keymap (kbd "M-s S") 'sp-backward-slurp-sexp)
+(define-key sp-keymap (kbd "M-s R") 'sp-backward-barf-sexp)
+(define-key sp-keymap (kbd "M-s F") 'sp-forward-symbol)
+(define-key sp-keymap (kbd "M-s B") 'sp-backward-symbol)
+
+(define-key sp-keymap (kbd "M-s [") 'sp-select-previous-thing)
+(define-key sp-keymap (kbd "M-s ]") 'sp-select-next-thing)
+
+(define-key sp-keymap (kbd "M-s M-i") 'sp-splice-sexp)
+(define-key sp-keymap (kbd "M-s <delete>") 'sp-splice-sexp-killing-forward)
+(define-key sp-keymap (kbd "M-s <backspace>") 'sp-splice-sexp-killing-backward)
+(define-key sp-keymap (kbd "M-s M-<backspace>") 'sp-splice-sexp-killing-around)
+
+(define-key sp-keymap (kbd "M-s M-d") 'sp-unwrap-sexp)
+(define-key sp-keymap (kbd "M-s M-b") 'sp-backward-unwrap-sexp)
+
+(define-key sp-keymap (kbd "M-s M-t") 'sp-prefix-tag-object)
+(define-key sp-keymap (kbd "M-s M-p") 'sp-prefix-pair-object)
+(define-key sp-keymap (kbd "M-s M-c") 'sp-convolute-sexp)
+(define-key sp-keymap (kbd "M-s M-a") 'sp-absorb-sexp)
+(define-key sp-keymap (kbd "M-s M-e") 'sp-emit-sexp)
+(define-key sp-keymap (kbd "M-s M-p") 'sp-add-to-previous-sexp)
+(define-key sp-keymap (kbd "M-s M-n") 'sp-add-to-next-sexp)
+(define-key sp-keymap (kbd "M-s M-j") 'sp-join-sexp)
+(define-key sp-keymap (kbd "M-s M-s") 'sp-split-sexp)
+(define-key sp-keymap (kbd "M-s M-r") 'sp-raise-sexp)
+
+
 (add-to-list 'load-path "~/emacs/extension/expand-region")
 (require 'expand-region)
 (global-set-key (kbd "C-=") 'er/expand-region)
@@ -240,6 +328,14 @@
 (add-hook 'emacs-lisp-mode-hook 
           (lambda()
             (setq mode-name "EL"))) 
+
+;; (add-to-list 'load-path "~/emacs/extension/helm")
+;; (require 'helm-config)
+;; (helm-mode t)
+;; (global-set-key (kbd "C-x C-f") 'helm-find-files)
+;; (global-set-key (kbd "C-x c g") 'helm-do-grep)
+;; (global-set-key (kbd "C-x c o") 'helm-occur)
+
 
 (add-to-list 'load-path "~/emacs/extension/auto-complete")
 (require 'auto-complete-config)
@@ -273,3 +369,24 @@
 
 ;; (add-hook 'LaTeX-mode-hook 'flyspell-mode)
 ;; (add-hook 'LaTeX-mode-hook 'flyspell-buffer)
+
+
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
+(setq
+ mu4e-maildir       "~/Maildir"   ;; top-level Maildir
+ mu4e-sent-folder   "/sent"       ;; folder for sent messages
+ mu4e-drafts-folder "/drafts"     ;; unfinished messages
+ mu4e-trash-folder  "/trash"      ;; trashed messages
+ mu4e-refile-folder "/archive")   ;; saved messages
+
+;; enable inline images
+(setq mu4e-view-show-images t)
+;; use imagemagick, if available
+(when (fboundp 'imagemagick-register-types)
+  (imagemagick-register-types))
+
+(setq mu4e-view-prefer-html t)
+(setq mu4e-html2text-command
+      "html2markdown | grep -v '&nbsp_place_holder;'")
