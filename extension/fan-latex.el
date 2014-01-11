@@ -6,10 +6,9 @@
 ;; Version: 0.1
 ;; Keywords: funtion
 
-(add-to-list 'load-path "~/emacs/extension/auctex" t)
-(load "auctex.el" nil t t)
+;; (load "auctex.el" nil t t)
 ;;(load "preview-latex.el" nil t t)
-(load "tex-site.el" nil t t)
+;; (load "tex-site.el" nil t t)
 
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
@@ -39,9 +38,9 @@
                              (imenu-add-menubar-index)
                              (setq TeX-save-query nil)
                              (setq TeX-show-compilation t)
-                             (setq TeX-electric-escape t)      ;; 按 \ 后光标跳到mini-buffer
-                             (setq TeX-view-program-list '(("Evince" "evince %o"))) ;;重新定义
-                             (setq TeX-view-program-selection '((output-pdf "Evince")))
+                             (setq TeX-electric-escape t)      ;; 按 \ 后光标跳
+                             (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+                             (setq TeX-view-program-list '(("PDF Viewer" "open %o")))
                              (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode) -shell-escape%' %t" TeX-run-TeX nil t))
                              (setq TeX-command-default "XeLaTeX")
                              ;;定义latex-mode下的快捷键
