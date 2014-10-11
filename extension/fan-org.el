@@ -6,12 +6,12 @@
 ;; Version: 0.1
 ;; Keywords: funtion
 
-
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/lisp"))
 (add-to-list 'load-path (expand-file-name "~/emacs/org-mode/contrib/lisp"))
 (require 'org-install)
-(add-to-list 'auto-mode-alist '("\\.\\(org\\  |org_archive\\|txt\\)" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 (require 'org-habit)
+(require 'org-list)
 (global-set-key "\C-cc" 'org-capture)
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
@@ -19,16 +19,10 @@
 (setq system-time-locale "C")
 (setq org-agenda-ndays 1)
 
-(require 'org-crypt)
-(org-crypt-use-before-save-magic)
-(setq org-tags-exclude-from-inheritance (quote ("crypt")))
-(setq org-crypt-key nil)
-(setq org-crypt-disable-auto-save nil)
 
 (setq org-agenda-files (quote ("~/git/org/org.org")))
 (setq org-default-notes-file "~/git/org/refile.org")
 
-(global-set-key (kbd "C-c d") 'org-decrypt-entry)
 (global-set-key (kbd "C-c i") 'org-clock-in)
 (global-set-key (kbd "<f8>") 'org-clock-goto)
 (global-set-key (kbd "<f9> c") 'calendar)
@@ -144,9 +138,6 @@
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-allow-creating-parent-nodes (quote confirm))
 (setq org-completion-use-ido t)
-(setq ido-everywhere t)
-(setq ido-max-directory-size 100000)
-(ido-mode (quote both))
 
 (defun bh/verify-refile-target ()
   "Exclude todo keywords with a done state from refile targets"

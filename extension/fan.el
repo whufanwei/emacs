@@ -1,125 +1,89 @@
 ;;; fan.el
 ;;
-;; Copyright (c) 2012 欧阳威
+;; Copyright (c) 2014 欧阳威
 ;;
-;; Version: 0.1
+;; Version: 0.12
 ;; Keywords: funtion
 
-(defun move-line (n)
-  "Move the current line up or down by N lines."
-  (interactive "p")
-  (setq col (current-column))
-  (beginning-of-line) (setq start (point))
-  (end-of-line) (forward-char) (setq end (point))
-  (let ((line-text (delete-and-extract-region start end)))
-    (forward-line n)
-    ;; restore point to original column in moved line
-    (insert line-text)
-    (forward-line -1)
-    (forward-char col)))
+;; -------------------------------------------------------------------------------
+;; 文件操作
 
-(defun move-line-up (n)
-  "Move the current line up by N lines."
-  (interactive "p")
-  (move-line (if (null n) -1 (- n))))
+;; 复制当前文件名
+(defun prelude-copy-file-name-to-clipboard ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
 
-(defun move-line-down (n)
-  "Move the current line down by N lines."
-  (interactive "p")
-  (move-line (if (null n) 1 n)))
-
-(global-set-key (kbd "M-<up>") 'move-line-up)
-(global-set-key (kbd "M-<down>") 'move-line-down)
-
-
-;; 高级复制
-
-(defun get-point (symbol &optional arg)
-  "get the point"
-  (funcall symbol arg)
-  (point)
-  )
-
-(defun copy-thing (begin-of-thing end-of-thing &optional arg)
-  "copy thing between beg & end into kill ring"
-  (save-excursion
-    (let ((beg (get-point begin-of-thing 1))
-          (end (get-point end-of-thing arg)))
-      (copy-region-as-kill beg end)))
-  )
-
-(defun copy-word (&optional arg)
-  "Copy words at point into kill-ring"
-  (interactive "P")
-  (copy-thing 'backward-word 'forward-word arg)
-  ;;(paste-to-mark arg)
-  )
-(defun copy-line (&optional arg)
-  "Save current line into Kill-Ring without mark the line "
-  (interactive "P")
-  (copy-thing 'beginning-of-line 'end-of-line arg)
-  ;; (paste-to-mark arg)
-  )
-
-(defun copy-paragraph (&optional arg)
-  "Copy paragraphes at point"
-  (interactive "P")
-  (copy-thing 'backward-paragraph 'forward-paragraph arg)
-  ;; (paste-to-mark arg)
-  )
-
-(defun beginning-of-parenthesis(&optional arg)
-  "  "
-  (re-search-backward "[[<(?\"]" (line-beginning-position) 3 1)
-  (if (looking-at "[[<(?\"]")  (goto-char (+ (point) 1)) )
-  )
-(defun end-of-parenthesis(&optional arg)
-  " "
-  (re-search-forward "[]>)?\"]" (line-end-position) 3 arg)
-  (if (looking-back "[]>)?\"]") (goto-char (- (point) 1)) )
-  )
-
-(defun thing-copy-parenthesis-to-mark(&optional arg)
-  " Try to copy a parenthesis and paste it to the mark
-     When used in shell-mode, it will paste parenthesis on shell prompt by default "
-  (interactive "P")
-  (copy-thing 'beginning-of-parenthesis 'end-of-parenthesis arg)
-  )
-
-(global-set-key (kbd "C-c p") (quote thing-copy-parenthesis-to-mark))
-(global-set-key (kbd "C-c w") (quote copy-word))
-(global-set-key (kbd "C-c l") (quote copy-line))
+;; 文件重命名
+(defun prelude-rename-file-and-buffer ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (message "Buffer is not visiting a file!")
+      (let ((new-name (read-file-name "New name: " filename)))
+        (cond
+         ((vc-backend filename) (vc-rename-file filename new-name))
+         (t
+          (rename-file filename new-name t)
+          (set-visited-file-name new-name t t)))))))
 
 ;; 窗口切换
-(defun toggle-window-split ()
-  "Vertical split shows more of each line, horizontal split shows
-more lines. This code toggles between them. It only works for
-frames with exactly two windows."
+(defun prelude-swap-windows ()
+  "If you have 2 windows, it swaps them."
   (interactive)
-  (if (= (count-windows) 2)
-      (let* ((this-win-buffer (window-buffer))
-	     (next-win-buffer (window-buffer (next-window)))
-	     (this-win-edges (window-edges (selected-window)))
-	     (next-win-edges (window-edges (next-window)))
-	     (this-win-2nd (not (and (<= (car this-win-edges)
-					 (car next-win-edges))
-				     (<= (cadr this-win-edges)
-					 (cadr next-win-edges)))))
-	     (splitter
-	      (if (= (car this-win-edges)
-		     (car (window-edges (next-window))))
-		  'split-window-horizontally
-		'split-window-vertically)))
-	(delete-other-windows)
-	(let ((first-win (selected-window)))
-	  (funcall splitter)
-	  (if this-win-2nd (other-window 1))
-	  (set-window-buffer (selected-window) this-win-buffer)
-	  (set-window-buffer (next-window) next-win-buffer)
-	  (select-window first-win)
-	  (if this-win-2nd (other-window 1))))))
+  (if (/= (count-windows) 2)
+      (message "You need exactly 2 windows to do this.")
+    (let* ((w1 (car (window-list)))
+           (w2 (cadr (window-list)))
+           (b1 (window-buffer w1))
+           (b2 (window-buffer w2))
+           (s1 (window-start w1))
+           (s2 (window-start w2)))
+      (set-window-buffer w1 b2)
+      (set-window-buffer w2 b1)
+      (set-window-start w1 s2)
+      (set-window-start w2 s1)))
+  (other-window 1))
 
-(global-set-key [(control x) (t)] 'toggle-window-split)
+;; 仅保留当前buffer。
+(defun prelude-kill-other-buffers ()
+  "Kill all buffers but the current one.
+Doesn't mess with special buffers."
+  (interactive)
+  (-each
+      (->> (buffer-list)
+        (-filter #'buffer-file-name)
+        (--remove (eql (current-buffer) it)))
+    #'kill-buffer))
+
+(defun switch-to-previous-buffer ()
+  "Switch to previously open buffer.
+Repeated invocations toggle between the two most recently open buffers."
+  (interactive)
+  (switch-to-buffer (other-buffer (current-buffer) 1)))
+
+;;-----------------------------------------------------
+
+(defun move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
+
+(defun move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
 
 ;; ----------------------注释当前行------------------
 (defun qiang-comment-dwim-line (&optional arg)
@@ -172,36 +136,6 @@ frames with exactly two windows."
     (jump-to-register 8)
     (set-register 8 tmp)))
 
-;; -----------------------------结束--------------------------------
-(defun delete-enclosed-text ()
-  "Delete texts between any pair of delimiters."
-  (interactive)
-  (save-excursion
-    (let (p1 p2)
-      (skip-chars-backward "^([<>'‘“\"") (setq p1 (point))
-      (skip-chars-forward "^)]<>'’”\"") (setq p2 (point))
-      (delete-region p1 p2))))
-(global-set-key (kbd "C-M-d") 'delete-enclosed-text);;删除括号内的内容。
-;; (global-set-key (kbd "C-M-d") 'delete-pair);;删除括号。
-
-(defun joseph-jump-to-space-forward()
-  (interactive)
-  (let ((old-pos (point))
-	m-end m-begin
-	)
-    (when (re-search-forward "[ \t]+"  nil t)
-      (setq m-begin (match-beginning 0))
-      (setq m-end (match-end 0))
-      (goto-char m-begin)
-      (if (equal old-pos m-end)
-	  (progn
-	    (re-search-forward "[ \t]+"  nil t)
-	    (goto-char (match-beginning 0)))
-	(if (equal m-begin old-pos)
-	    (goto-char m-end)
-	  )))))
-;; (global-set-key (kbd "C-o") 'joseph-jump-to-space-forward);;跳到下一处空格
-
 ;; 搜索光标下字符串
 (defun my-isearch-yank-word-or-char-from-beginning ()
   "Move to beginning of word before yanking word in isearch-mode."
@@ -223,3 +157,5 @@ frames with exactly two windows."
 				       isearch-mode-map)))
 
 (provide 'fan)
+
+

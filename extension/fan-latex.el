@@ -6,15 +6,19 @@
 ;; Version: 0.1
 ;; Keywords: funtion
 
-;; (load "auctex.el" nil t t)
-;;(load "preview-latex.el" nil t t)
-;; (load "tex-site.el" nil t t)
+(add-to-list 'load-path "~/emacs/auctex-11.87" t)
 
+(load "auctex.el" nil t t)
+(load "preview-latex.el" nil t t)
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
 ;;(setq preview-scale-function 1.5)
 (setq LaTeX-math-mode t)
+
+(require 'cdlatex)
+(add-hook 'LaTeX-mode-hook 'turn-on-cdlatex)   ; with AUCTeX LaTeX mode
+(add-hook 'latex-mode-hook 'turn-on-cdlatex)   ; with Emacs latex mode
 
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
 (setq reftex-plug-into-AUCTeX t)
@@ -48,7 +52,6 @@
                              (setq LaTeX-section-hook
                                    '(LaTeX-section-heading
                                      LaTeX-section-title
-                                     ;;LaTeX-section-toc
                                      LaTeX-section-section
                                      LaTeX-section-label))))
 (provide 'fan-latex)
