@@ -3,7 +3,7 @@
 (setq mac-command-modifier 'meta)
 (setq ns-function-modifier 'hyper)
 
-(defun prelude-swap-meta-and-super ()
+(defun fan-swap-meta-and-super ()
   "Swap the mapping of Meta and Super.
 Very useful for people using their Mac with a
 Windows external keyboard from time to time."

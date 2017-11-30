@@ -3,14 +3,20 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(anzu-deactivate-region t)
+ '(anzu-mode-lighter "")
+ '(anzu-replace-threshold 50)
+ '(anzu-replace-to-string-separator " => ")
+ '(anzu-search-threshold 1000)
  '(column-number-mode t)
  '(cua-mode t nil (cua-base))
  '(fringe-mode (quote (4 . 4)) nil (fringe))
  '(indicate-empty-lines t)
- ;; '(org-clock-mode-line-total (quote auto))
- ;; '(org-clock-modeline-total (quote auto))
  '(org-indent-mode-turns-on-hiding-stars t)
  '(org-table-auto-blank-field nil)
+ '(package-selected-packages
+   (quote
+    (which-key diminish company-quickhelp aggressive-indent org beacon tangotango-theme dracula-theme company goto-last-change spaceline-all-the-icons spaceline browse-kill-ring fix-word rainbow-mode rainbow-delimiters cdlatex auctex ag magit projectile easy-kill flx-ido crux smex counsel swiper ivy elisp-slime-nav avy-zap avy iedit hungry-delete mwim use-package s paradox expand-region drag-stuff comment-dwim-2 cal-china-x auto-indent-mode anzu)))
  '(safe-local-variable-values (quote ((emacs-lisp-docstring-fill-column . 75))))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
@@ -61,7 +67,7 @@
 (column-number-mode 1)
 (size-indication-mode 1)
 (setq enable-recursive-minibuffers t)
-(setq-default word-wrap t)
+;; (setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
 (setq default-fill-column 80)
 (setq default-major-mode 'org-mode)
@@ -71,23 +77,16 @@
 (setq mouse-yank-at-point t)
 (setq visible-bell t)
 (global-visual-line-mode 1)
+(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
 (setq-default tab-width 2 indent-tabs-mode nil)
-;; (setq url-using-proxy t)
-;; (setq url-proxy-services '(("http" . "127.0.0.1:8086")))
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
-;; 清理buffer
-(require 'midnight)
-(setq clean-buffer-list-delay-general 1)
-(setq clean-buffer-list-delay-special (* 5 3600))
-(setq midnight-period (* 2 60 60))
-(setq clean-buffer-list-kill-regexps
-      '("^.*"))
+(setq mac-command-modifier 'super)
+(setq mac-option-modifier 'meta)
+(setq ns-function-modifier 'hyper)
 
-;; 正则表达式匹配
-(require 're-builder)
-(setq reb-re-syntax 'string)
-;; (global-set-key (kbd "C-c r") 're-builder)
+(toggle-frame-maximized)
+(global-set-key (kbd "C-c e") 'eval-buffer)
 
 ;; 使用root账户打开文件
 (require 'tramp)
@@ -101,228 +100,168 @@
 ;; 实现程序变量得自动对齐
 (require 'align)
 
-
 ;; ------------------------------------------------------------------
 
 (setenv "PATH" (concat "/usr/texbin:/usr/local/bin:" (getenv "PATH")))
-(setq exec-path (append '("/usr/texbin" "/usr/local/bin") exec-path)) 
-
-(require 'package)
-(setq package-archives '(
-                         ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")))
-(package-initialize)
+(setq exec-path (append '("/usr/texbin" "/usr/local/bin") exec-path))
 
 (add-to-list 'load-path "~/emacs/extension" t)
+(add-to-list 'load-path "~/.emacs.d/elpa" t)
 
-(require 'auto-indent-mode)
-(auto-indent-global-mode)
+(require 'package)
+(setq package-archives '(("gnu"   .  "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+                         ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+                         ("org" . "http://orgmode.org/elpa/")
+                         ("melpa-stable" . "https://stable.melpa.org/packages/")))
+(package-initialize)
 
-(defun prelude-add-subfolders-to-load-path (parent-dir)
- "Add all level PARENT-DIR subdirs to the `load-path'."
- (dolist (f (directory-files parent-dir))
-   (let ((name (expand-file-name f parent-dir)))
-     (when (and (file-directory-p name)
-                (not (equal f ".."))
-                (not (equal f ".")))
-       (add-to-list 'load-path name)
-       (prelude-add-subfolders-to-load-path name)))))
-
-(defvar elpa-dir  "~/emacs/elpa/")
-(prelude-add-subfolders-to-load-path  elpa-dir)
-
-(defvar melpa-dir  "~/.emacs.d/elpa/")
-(prelude-add-subfolders-to-load-path  melpa-dir)
-
-
-(require 'fan)
-(require 'fan-osx)
 (require 'fan-something)
 
 (require 's)
 
-;; (require 'git)
 (require 'use-package)
 
-(use-package flx-ido
-  :init (flx-ido-mode 1)
+
+(use-package swiper
   :config
-  (progn
-    (ido-mode 1)
-    (ido-everywhere 1)
-    (flx-ido-mode 1)
-    (setq ido-enable-flex-matching t)
-    ;; (setq ido-use-kface nil)
-    )
-  )
+  (ivy-mode 1)
+  (setq enable-recursive-minibuffers t)
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-count-format "%d/%d ")
+  (global-set-key (kbd "C-s") 'swiper)
+  (global-set-key (kbd "C-c C-r") 'ivy-resume)
+  (global-set-key (kbd "M-x") 'counsel-M-x)
+  (global-set-key (kbd "C-c s") 'counsel-describe-function)
+  (global-set-key (kbd "<f1> l") 'counsel-find-library)
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file))
 
-(require 'ido-vertical-mode)
-(ido-vertical-mode)
+(use-package counsel
+  :bind
+  (("M-y" . counsel-yank-pop)
+   :map ivy-minibuffer-map
+   ("M-y" . ivy-next-line)))
 
-(setq ido-decorations
-      '("\n-> " "" "\n " "\n ..." "[" "]"
-        " [No match]" " [Matched]" " [Not readable]" " [Too big]" " [Confirm]"))
+;; (require 'key-chord)
+;; (key-chord-mode 1)
 
-(use-package ace-jump-mode
-  :bind ("C-c SPC" . ace-jump-mode))
+;; ;;(require 'fancy-narrow)
 
-(use-package smex
-  :config (smex-initialize)
-  :bind ("M-x" . smex))
+;; (require 'guide-key)
+;; (setq guide-key/guide-key-sequence '("C-x r" "C-c"))
+;; (guide-key-mode 1)
+;; (setq guide-key/idle-delay 0.1)
 
-(use-package multiple-cursors
-  :bind (("C->" . mc/mark-next-like-this)
-         ("C-<" . mc/mark-previous-like-this)))
+;; (require 'keyfreq)
+;; (keyfreq-mode 1)
+;; (keyfreq-autosave-mode 1)
 
-(use-package projectile
-  :init (projectile-global-mode 1)
+(use-package crux
+  :bind (("C-k"   . crux-smart-kill-line)
+         ("C-z"   . crux-smart-open-line)
+         ("C-o"   . crux-smart-open-line-above)
+         ("C-x f"  . crux-recentf-find-file)
+         ("C-c n" . crux-cleanup-buffer-or-region)
+         ("C-c D" . crux-delete-file-and-buffer)
+         ("C-x C-r" . crux-rename-buffer-and-file)
+         ("C-c t" . crux-visit-term-buffer)
+         ("C-c k" . crux-kill-other-buffers)
+         ("C-<backspace>" . crux-kill-line-backwards)
+         ("C-a" . crux-move-beginning-of-line)))
+
+(use-package avy
+  :bind (("C-:" . avy-goto-char)
+         ("C-'" . avy-goto-char-2)
+         ("M-g f" . avy-goto-line)
+         ("M-g w" . avy-goto-word-1)
+         ("M-g e" . avy-goto-word-0))
+  :init (add-hook 'after-init-hook #'avy-setup-default)
+  :config (setq avy-background t))
+
+;; Kill text between the point and the character CHAR
+(use-package avy-zap
+  :bind (("M-z" . avy-zap-to-char-dwim)))
+
+(use-package hungry-delete
+  :diminish hungry-delete-mode
+  :init (add-hook 'after-init-hook #'global-hungry-delete-mode)
+  :config (setq-default hungry-delete-chars-to-skip " \t\f\v"))
+
+(use-package comment-dwim-2
+  :bind ("M-;" . comment-dwim-2))
+
+(use-package drag-stuff
+  :diminish drag-stuff-mode
+  :init (add-hook 'after-init-hook #'drag-stuff-global-mode)
   :config
-  (progn
-    (setq projectile-enable-caching t)
-    (setq projectile-require-project-root nil)
-    (setq projectile-completion-system 'ido)
-    (add-to-list 'projectile-globally-ignored-files ".DS_Store")))
-
-(eval-after-load 'info
-  '(progn (info-initialize)
-          (add-to-list 'Info-directory-list "~/emacs/elpa/magit-master")))
-
-(use-package magit
-  :init
-  (progn
-    (use-package magit-blame)
-    (bind-key "C-c C-a" 'magit-just-amend magit-mode-map))
-  :config
-  (progn
-    (setq magit-default-tracking-name-function 'magit-default-tracking-name-branch-only)
-    (setq magit-set-upstream-on-push t)
-    (setq magit-completing-read-function 'magit-ido-completing-read)
-    (setq magit-stage-all-confirm nil)
-    (setq magit-unstage-all-confirm nil)
-    (setq magit-restore-window-configuration t))
-  :bind ("C-c m" . magit-status))
-
-(use-package git-timemachine)
+  (add-to-list 'drag-stuff-except-modes 'org-mode)
+  (drag-stuff-define-keys))
 
 (use-package expand-region
   :bind ("C-=" . er/expand-region))
 
-(use-package markdown-mode
-  :mode (("\\.markdown$" . markdown-mode)
-         ("\\.md$" . markdown-mode)))
+(use-package anzu
+  :bind (("M-%" . anzu-query-replace)
+         ("C-c r" . anzu-query-replace-regexp))
+  :config
+  (set-face-attribute 'anzu-mode-line nil
+                      :foreground "blue" :weight 'bold)
+  (global-anzu-mode)
+  (setq anzu-cons-mode-line-p nil))
 
-(use-package ack-and-a-half
-  :init
-  (progn
-    (defalias 'ack 'ack-and-a-half)
-    (defalias 'ack-same 'ack-and-a-half-same)
-    (defalias 'ack-find-file 'ack-and-a-half-find-file)
-    (defalias 'ack-find-file-same 'ack-and-a-half-find-file-same)))
-
-(use-package smartparens
-  :init
-  (progn
-    (use-package smartparens-config)
-    (use-package smartparens-latex)
-    (use-package smartparens-html)
-    (smartparens-global-mode 1)
-    (show-smartparens-global-mode 1))
+(use-package which-key
+  :defer 10
   :config
   (progn
-    (setq smartparens-strict-mode t)
-    (setq sp-autoinsert-if-followed-by-word t)
-    (sp-local-pair 'emacs-lisp-mode "`" nil :when '(sp-in-string-p))
-    (sp-local-tag '(sgml-mode html-mode rhtml-mode) "<" "<_>" "</_>" :transform 'sp-match-sgml-tags))
-   )
+    (setq which-key-popup-type 'minibuffer)
+    (setq which-key-compute-remaps t) ;Show correct descriptions for remapped keys
+    (which-key-mode 1)))
 
-(use-package exec-path-from-shell
-  :init
-  (progn
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))))
+(use-package goto-last-change
+  :bind
+  ("C-c l" . goto-last-change))
 
-(use-package rainbow-delimiters
-  :init (global-rainbow-delimiters-mode))
+(use-package company
+  :diminish company-mode
+  :init (progn
+          (add-hook 'after-init-hook 'global-company-mode)
+          (setq company-dabbrev-ignore-case nil
+                company-dabbrev-code-ignore-case nil
+                company-dabbrev-downcase nil
+                company-idle-delay 0
+                company-begin-commands '(self-insert-command)
+                company-transformers '(company-sort-by-occurrence))))
 
-(require 'dired-details)
+(use-package beacon
+  :diminish beacon-mode
+  :config
+  (beacon-mode 1)
+  (setq beacon-push-mark 10))
 
-(require 'hungry-delete)
-(global-hungry-delete-mode)
+(use-package easy-kill
+  :config
+  (global-set-key [remap kill-ring-save] 'easy-kill))
 
-(require 'key-chord)
-(key-chord-mode 1)
+(use-package aggressive-indent
+  :diminish aggressive-indent-mode
+  :config (add-hook 'prog-mode-hook 'aggressive-indent-mode))
 
-(require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "/usr/share/dict/words")
-;; (add-to-list 'ac-dictionary-directories "~/emacs/ac-dict")
-(ac-config-default)
-;; Show 0.2 second later
-(setq ac-auto-show-menu 0.2)
-(setq-default ac-sources '(ac-source-semantic
-                           ac-source-ropemacs
-                           ac-source-variables
-                           ac-source-imenu
-                           ac-source-files-in-current-dir
-                           ac-source-words-in-buffer
-                           ac-source-words-in-all-buffer
-                           ac-source-dictionary
-                           ac-source-functions
-                           ac-source-abbrev
-                           ac-source-filename))
-(setq ac-auto-start 2)
-(setq ac-dwim t)
-(global-auto-complete-mode t)
+(use-package magit
+  :ensure t
+  :bind (("C-c m" . magit-status)))
 
-(require 'ace-jump-buffer)
-
-(require 'fancy-narrow)
-
-(require 'guide-key)
-(setq guide-key/guide-key-sequence '("C-x r" "C-c"))
-(guide-key-mode 1)
-(setq guide-key/idle-delay 0.1)
-
-(require 'elisp-slime-nav)
-  (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
-    (add-hook hook 'turn-on-elisp-slime-nav-mode))
-
-(require 'keyfreq)
-(keyfreq-mode 1)
-(keyfreq-autosave-mode 1)
-
-(require 'diminish)
-(diminish 'projectile-mode)
-(diminish 'guide-key-mode)
-;;(diminish 'elisp-slime-nav)
-(add-hook 'emacs-lisp-mode-hook 
-          (lambda()
-            (setq mode-name "EL"))) 
-
-(require 'cal-china-x)
-(setq mark-holidays-in-calendar t)
-(setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
-(setq calendar-holidays cal-china-x-important-holidays)
-
-(require 'anzu)
-(global-anzu-mode +1)
-(set-face-attribute 'anzu-mode-line nil
-                    :foreground "blue" :weight 'bold)
-(custom-set-variables
- '(anzu-mode-lighter "")
- '(anzu-deactivate-region t)
- '(anzu-search-threshold 1000)
- '(anzu-replace-to-string-separator " => "))
-
-(require 'goto-chg)
-
-
-(require 'easy-kill)
-
-(require 'powerline)
-(setq powerline-arrow-shape 'arrow)   ;; the default
-
-(require 'fan-org)
 (require 'fan-latex)
-(require 'fan-keybinding)
+
+
+;; (require 'fan-org)
+;; (require 'fan-keybinding)
 
 (add-to-list 'custom-theme-load-path "~/emacs/color")
-(load-theme 'tangotango t)
+;; (load-theme 'tangotango t)
+(load-theme 'dracula t)
+
+
+(use-package spaceline-config
+  :ensure spaceline
+  :config
+  (spaceline-info-mode)
+  (spaceline-emacs-theme))

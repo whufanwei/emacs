@@ -8,6 +8,7 @@
 ;; Author: Julien Barnier
 ;; Adapted-By: Yesudeep Mangalapilly
 ;; Keywords: tango palette color theme emacs
+;; Package-Version: 20170924.809
 ;; URL: https://github.com/juba/color-theme-tangotango
 ;; Version: 0.0.6
 
@@ -47,7 +48,6 @@
  `(fixed-pitch ((t (:inherit (default)))))
  `(variable-pitch ((t (:family "Sans Serif"))))
  `(escape-glyph ((((background dark)) (:foreground "cyan")) (((type pc)) (:foreground "magenta")) (t (:foreground "brown"))))
- `(minibuffer-prompt ((t (:weight bold :foreground "#729fcf"))))
  `(highlight ((t (:background "brown4"))))
  `(region ((t (:background "dark slate blue"))))
  `(shadow ((((class color grayscale) (min-colors 88) (background light)) (:foreground "grey50")) (((class color grayscale) (min-colors 88) (background dark)) (:foreground "grey70")) (((class color) (min-colors 8) (background light)) (:foreground "green")) (((class color) (min-colors 8) (background dark)) (:foreground "yellow"))))
@@ -71,7 +71,7 @@
  `(button ((t (:inherit (link)))))
  `(link ((t (:foreground "dodger blue" :underline (:color foreground-color :style line)))))
  `(link-visited ((default (:inherit (link))) (((class color) (background light)) (:foreground "magenta4")) (((class color) (background dark)) (:foreground "violet"))))
- `(fringe ((t (:background "grey10"))))
+ `(fringe ((t (:background "#2e3434"))))
  `(header-line ((default (:inherit (mode-line))) (((type tty)) (:underline (:color foreground-color :style line) :inverse-video nil)) (((class color grayscale) (background light)) (:box nil :foreground "grey20" :background "grey90")) (((class color grayscale) (background dark)) (:box nil :foreground "grey90" :background "grey20")) (((class mono) (background light)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "black" :background "white")) (((class mono) (background dark)) (:underline (:color foreground-color :style line) :box nil :inverse-video nil :foreground "white" :background "black"))))
  `(tooltip ((t (:background "lightyellow" :foreground "black" :inherit (quote variable-pitch)))))
  `(mode-line ((t (:box (:line-width 1 :color nil :style released-button) :background "#222222" :foreground "#bbbbbc"))))
@@ -139,7 +139,7 @@
  `(gnus-header-newsgroups((t (:italic t :bold t :foreground "LightSkyBlue3"))))
  `(gnus-signature((t (:italic t :foreground "dark grey"))))
  `(gnus-summary-cancelled((t (:background "black" :foreground "yellow"))))
- `(gnus-summary-high-ancient((t (:bold t :foreground "rotal blue"))))
+ `(gnus-summary-high-ancient((t (:bold t :foreground "royal blue"))))
  `(gnus-summary-high-read((t (:bold t :foreground "lime green"))))
  `(gnus-summary-high-ticked((t (:bold t :foreground "tomato"))))
  `(gnus-summary-high-unread((t (:bold t :foreground "white"))))
@@ -191,9 +191,6 @@
  `(ess-jb-h3-face ((t (:height 1.2 :foreground "#edd400" :slant normal))))
  `(ecb-default-highlight-face ((t (:background "#729fcf"))))
  `(ecb-tag-header-face ((t (:background "#f57900"))))
- `(magit-header ((t (:foreground "#edd400"))))
- `(magit-diff-add ((t (:foreground "#729fcf"))))
- `(magit-item-highlight ((t (:weight extra-bold :inverse-video t))))
  `(diff-header ((t (:background "gray30"))))
  `(diff-index ((t (:foreground "#edd400" :bold t))))
  `(diff-file-header ((t (:foreground "#eeeeec" :bold t))))
@@ -232,6 +229,10 @@
  `(rpm-spec-section-face ((t (:foreground "#8ae234" :underline t :weight bold))))
  `(rpm-spec-tag-face ((t (:foreground "dodger blue" :weight bold))))
  `(rpm-spec-var-face ((t (:foreground "tomato"))))
+ ;; regexp metachars
+ `(font-lock-negation-char-face ((t (:foreground "#6ac214"))))
+ `(font-lock-regexp-grouping-construct ((t (:foreground "#edd400"))))
+ `(font-lock-regexp-grouping-backslash ((t (:foreground "#888a85"))))
  `(which-func ((t (:inherit (font-lock-function-name-face) :weight normal))))
  )
 

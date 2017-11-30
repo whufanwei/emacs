@@ -6,9 +6,7 @@
 ;; Version: 0.1
 ;; Keywords: funtion
 
-(add-to-list 'load-path (expand-file-name "~/emacs/org-mode/lisp"))
-(add-to-list 'load-path (expand-file-name "~/emacs/org-mode/contrib/lisp"))
-(require 'org-install)
+
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 (require 'org-habit)
 (require 'org-list)
