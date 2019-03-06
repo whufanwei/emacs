@@ -12,11 +12,9 @@
  '(cua-mode t nil (cua-base))
  '(fringe-mode (quote (4 . 4)) nil (fringe))
  '(indicate-empty-lines t)
- '(org-indent-mode-turns-on-hiding-stars t)
- '(org-table-auto-blank-field nil)
  '(package-selected-packages
    (quote
-    (which-key diminish company-quickhelp aggressive-indent org beacon tangotango-theme dracula-theme company goto-last-change spaceline-all-the-icons spaceline browse-kill-ring fix-word rainbow-mode rainbow-delimiters cdlatex auctex ag magit projectile easy-kill flx-ido crux smex counsel swiper ivy elisp-slime-nav avy-zap avy iedit hungry-delete mwim use-package s paradox expand-region drag-stuff comment-dwim-2 cal-china-x auto-indent-mode anzu)))
+    (exec-path-from-shell elpy xah-replace-pairs ethan-wspace markdown-mode yaml-mode deft which-key use-package tangotango-theme spaceline-all-the-icons smex rainbow-mode rainbow-delimiters projectile paradox org magit iedit hungry-delete goto-last-change fix-word expand-region elisp-slime-nav easy-kill drag-stuff dracula-theme diminish crux counsel company-quickhelp comment-dwim-2 cdlatex cal-china-x browse-kill-ring beacon avy-zap auto-indent-mode auctex anzu aggressive-indent ag)))
  '(safe-local-variable-values (quote ((emacs-lisp-docstring-fill-column . 75))))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
@@ -67,23 +65,20 @@
 (column-number-mode 1)
 (size-indication-mode 1)
 (setq enable-recursive-minibuffers t)
-;; (setq-default word-wrap t)
+(setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
 (setq default-fill-column 80)
-(setq default-major-mode 'org-mode)
 (setq global-font-lock-mode t)
 (setq auto-image-file-mode t)
 (setq frame-title-format "%b")
 (setq mouse-yank-at-point t)
 (setq visible-bell t)
-(global-visual-line-mode 1)
-(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
-(setq-default tab-width 2 indent-tabs-mode nil)
-(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+(setq-default truncate-lines t)
+;; (global-visual-line-mode 1)
 
 (setq mac-command-modifier 'super)
 (setq mac-option-modifier 'meta)
-(setq ns-function-modifier 'hyper)
 
 (toggle-frame-maximized)
 (global-set-key (kbd "C-c e") 'eval-buffer)
@@ -115,12 +110,24 @@
                          ("melpa-stable" . "https://stable.melpa.org/packages/")))
 (package-initialize)
 
+(require 'use-package)
+
 (require 'fan-something)
+(use-package xah-replace-pairs)
+(global-set-key (kbd "C-c o") 'single-lines-only)
+(global-set-key (kbd "C-c f") 'xah-convert-fullwidth-chars)
+(global-set-key (kbd "C-c j") 'top-join-line)
 
 (require 's)
 
-(require 'use-package)
-
+(use-package diminish
+  :ensure t
+  :demand t
+  :diminish visual-line-mode
+  :diminish hs-minor-mode
+  :diminish abbrev-mode
+  :diminish auto-fill-function
+  :diminish subword-mode)
 
 (use-package swiper
   :config
@@ -141,10 +148,7 @@
    :map ivy-minibuffer-map
    ("M-y" . ivy-next-line)))
 
-;; (require 'key-chord)
-;; (key-chord-mode 1)
-
-;; ;;(require 'fancy-narrow)
+;; (require 'fancy-narrow)
 
 ;; (require 'guide-key)
 ;; (setq guide-key/guide-key-sequence '("C-x r" "C-c"))
@@ -249,8 +253,28 @@
   :ensure t
   :bind (("C-c m" . magit-status)))
 
-(require 'fan-latex)
+(use-package deft
+  :bind ("<f8>" . deft)
+  :commands (deft)
+  :config (setq deft-directory "~/emacs"
+                deft-extensions '("md" "org")))
 
+(use-package elpy
+  :ensure t)
+
+(use-package exec-path-from-shell)
+
+(use-package yaml-mode)
+
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+
+(require 'fan-latex)
 
 ;; (require 'fan-org)
 ;; (require 'fan-keybinding)
@@ -258,7 +282,6 @@
 (add-to-list 'custom-theme-load-path "~/emacs/color")
 ;; (load-theme 'tangotango t)
 (load-theme 'dracula t)
-
 
 (use-package spaceline-config
   :ensure spaceline
