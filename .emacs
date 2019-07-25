@@ -3,20 +3,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(anzu-deactivate-region t)
- '(anzu-mode-lighter "")
- '(anzu-replace-threshold 50)
- '(anzu-replace-to-string-separator " => ")
- '(anzu-search-threshold 1000)
  '(column-number-mode t)
- '(cua-mode t nil (cua-base))
- '(fringe-mode (quote (4 . 4)) nil (fringe))
- '(indicate-empty-lines t)
+ '(display-time-mode t)
+ '(menu-bar-mode nil)
  '(package-selected-packages
    (quote
-    (exec-path-from-shell elpy xah-replace-pairs ethan-wspace markdown-mode yaml-mode deft which-key use-package tangotango-theme spaceline-all-the-icons smex rainbow-mode rainbow-delimiters projectile paradox org magit iedit hungry-delete goto-last-change fix-word expand-region elisp-slime-nav easy-kill drag-stuff dracula-theme diminish crux counsel company-quickhelp comment-dwim-2 cdlatex cal-china-x browse-kill-ring beacon avy-zap auto-indent-mode auctex anzu aggressive-indent ag)))
- '(safe-local-variable-values (quote ((emacs-lisp-docstring-fill-column . 75))))
- '(scroll-bar-mode nil)
+    (rainbow-identifiers cal-china-x fix-word auctex spaceline spaceline-config yaml-mode which-key use-package markdown-mode magit hungry-delete goto-last-change expand-region exec-path-from-shell easy-kill drag-stuff deft crux counsel company comment-dwim-2 beacon avy-zap anzu anaconda-mode aggressive-indent)))
  '(show-paren-mode t)
  '(size-indication-mode t)
  '(tool-bar-mode nil))
@@ -31,11 +23,6 @@
 
 (set-face-attribute
  'default nil :font "Monaco 20")
-
-;; (dolist (charset '(kana han symbol cjk-misc bopomofo))
-;;   (set-fontset-font (frame-parameter nil 'font)
-;;                     charset
-;;                     (font-spec :family "Heiti SC" :size 22)))
 
 ;;M-x  eval-last-sexp 使.emacs中光标前的那一条语句立刻生效。
 ;;M-x  eval-region   使.emacs中选中的region中的语句立刻生效。
@@ -67,7 +54,7 @@
 (setq enable-recursive-minibuffers t)
 (setq-default word-wrap t)
 (setq-default auto-fill-function 'do-auto-fill)
-(setq default-fill-column 80)
+(setq default-fill-column 100)
 (setq global-font-lock-mode t)
 (setq auto-image-file-mode t)
 (setq frame-title-format "%b")
@@ -83,51 +70,45 @@
 (toggle-frame-maximized)
 (global-set-key (kbd "C-c e") 'eval-buffer)
 
-;; 使用root账户打开文件
-(require 'tramp)
-(defun sudo-find-file (file-name)
-  "Like find file, but opens the file as root."
-  (interactive "FSudo Find File: ")
-  (let ((tramp-file-name (concat "/sudo::" (expand-file-name file-name))))
-    (find-file tramp-file-name)))
-(global-set-key (kbd "<f9> r") 'sudo-find-file)
-
-;; 实现程序变量得自动对齐
-(require 'align)
-
 ;; ------------------------------------------------------------------
 
 (setenv "PATH" (concat "/usr/texbin:/usr/local/bin:" (getenv "PATH")))
 (setq exec-path (append '("/usr/texbin" "/usr/local/bin") exec-path))
+(setq python-shell-interpreter "/usr/local/bin/python3")
 
 (add-to-list 'load-path "~/emacs/extension" t)
 (add-to-list 'load-path "~/.emacs.d/elpa" t)
 
 (require 'package)
-(setq package-archives '(("gnu"   .  "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                         ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-                         ("org" . "http://orgmode.org/elpa/")
-                         ("melpa-stable" . "https://stable.melpa.org/packages/")))
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
 
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents) ; update archives
+  (package-install 'use-package)) ; grab the newest use-package
+
+;; Define packages
 (require 'use-package)
 
-(require 'fan-something)
-(use-package xah-replace-pairs)
-(global-set-key (kbd "C-c o") 'single-lines-only)
-(global-set-key (kbd "C-c f") 'xah-convert-fullwidth-chars)
-(global-set-key (kbd "C-c j") 'top-join-line)
+;; Always download if not available
+(setq use-package-always-ensure t)
 
-(require 's)
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
 
-(use-package diminish
-  :ensure t
-  :demand t
-  :diminish visual-line-mode
-  :diminish hs-minor-mode
-  :diminish abbrev-mode
-  :diminish auto-fill-function
-  :diminish subword-mode)
+
+(global-set-key (kbd "s-<up>") 'beginning-of-buffer)
+(global-set-key (kbd "s-<down>") 'end-of-buffer)
+(global-set-key (kbd "s-a") 'mark-whole-buffer)       ;; select all
+(global-set-key (kbd "s-s") 'save-buffer)             ;; save
+(global-set-key (kbd "s-S") 'write-file)              ;; save as
+(global-set-key (kbd "s-q") 'save-buffers-kill-emacs) ;; quit
+
+(global-set-key (kbd "s-z") 'undo)
+(global-set-key (kbd "s-<") 'previous-buffer)
+(global-set-key (kbd "s->") 'next-buffer)
 
 (use-package swiper
   :config
@@ -135,7 +116,7 @@
   (setq enable-recursive-minibuffers t)
   (setq ivy-use-virtual-buffers t)
   (setq ivy-count-format "%d/%d ")
-  (global-set-key (kbd "C-s") 'swiper)
+  (global-set-key (kbd "C-s") 'swiper-isearch)
   (global-set-key (kbd "C-c C-r") 'ivy-resume)
   (global-set-key (kbd "M-x") 'counsel-M-x)
   (global-set-key (kbd "C-c s") 'counsel-describe-function)
@@ -147,17 +128,6 @@
   (("M-y" . counsel-yank-pop)
    :map ivy-minibuffer-map
    ("M-y" . ivy-next-line)))
-
-;; (require 'fancy-narrow)
-
-;; (require 'guide-key)
-;; (setq guide-key/guide-key-sequence '("C-x r" "C-c"))
-;; (guide-key-mode 1)
-;; (setq guide-key/idle-delay 0.1)
-
-;; (require 'keyfreq)
-;; (keyfreq-mode 1)
-;; (keyfreq-autosave-mode 1)
 
 (use-package crux
   :bind (("C-k"   . crux-smart-kill-line)
@@ -173,7 +143,7 @@
          ("C-a" . crux-move-beginning-of-line)))
 
 (use-package avy
-  :bind (("C-:" . avy-goto-char)
+  :bind (("C-;" . avy-goto-char)
          ("C-'" . avy-goto-char-2)
          ("M-g f" . avy-goto-line)
          ("M-g w" . avy-goto-word-1)
@@ -250,7 +220,6 @@
   :config (add-hook 'prog-mode-hook 'aggressive-indent-mode))
 
 (use-package magit
-  :ensure t
   :bind (("C-c m" . magit-status)))
 
 (use-package deft
@@ -259,32 +228,39 @@
   :config (setq deft-directory "~/emacs"
                 deft-extensions '("md" "org")))
 
-(use-package elpy
-  :ensure t)
-
-(use-package exec-path-from-shell)
-
 (use-package yaml-mode)
 
+(use-package rainbow-delimiters
+  :ensure )
+
 (use-package markdown-mode
-  :ensure t
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
 
-(require 'fan-latex)
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
+  :interpreter ("python" . python-mode)
+  :config
+  (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'python-mode-hook 'company-mode)
+  ;; (add-hook 'python-mode-hook 'yas-minor-mode)
+  (add-hook 'python-mode-hook 'anaconda-mode))
 
-;; (require 'fan-org)
-;; (require 'fan-keybinding)
+(use-package anaconda-mode
+  :bind ("C-c C-d" . anaconda-mode-show-doc))
+
+(require 'fan-something)
+(require 'fan-latex)
 
 (add-to-list 'custom-theme-load-path "~/emacs/color")
 ;; (load-theme 'tangotango t)
 (load-theme 'dracula t)
 
-(use-package spaceline-config
-  :ensure spaceline
+(use-package spaceline
   :config
+  (require 'spaceline-config)
   (spaceline-info-mode)
-  (spaceline-emacs-theme))
+  (spaceline-spacemacs-theme))

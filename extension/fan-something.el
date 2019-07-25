@@ -81,108 +81,11 @@
                 cal-china-x-general-holidays
                 holiday-other-holidays)))
 
-(use-package rainbow-delimiters
-  :ensure t)
-
-(use-package lisp-mode
-  :diminish eldoc-mode
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
-  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
-  (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
-  (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode))
-
 (use-package fix-word
   :bind
   (("M-u" . fix-word-upcase)
    ("M-l" . fix-word-downcase)
    ("M-c" . fix-word-capitalize)))
 
-(defun single-lines-only ()
-  "replace multiple blank lines with a single one"
-  (interactive)
-  (goto-char (point-min))
-  (while (re-search-forward "\\(^\\s-*$\\)\n" nil t)
-    (replace-match "\n")
-    (forward-char 1)))
-
-(defun xah-convert-fullwidth-chars (@begin @end &optional @to-direction)
-  "Convert ASCII chars to/from Unicode fullwidth version.
-Works on current line or text selection.
-
-The conversion direction is determined like this: if the command
-has been repeated, then toggle. Else, always do to-Unicode
-direction.
-
-If `universal-argument' is called first:
-
- no C-u → Automatic.
- C-u → to ASCII
- C-u 1 → to ASCII
- C-u 2 → to Unicode
-
-
-Version 2018-08-02"
-
-  (interactive
-   (let ($p1 $p2)
-     (if (use-region-p)
-         (progn
-           (setq $p1 (region-beginning))
-           (setq $p2 (region-end)))
-       (progn
-         (setq $p1 (line-beginning-position))
-         (setq $p2 (line-end-position))))
-     (list $p1 $p2
-           (cond
-            ((equal current-prefix-arg nil) "auto")
-            ((equal current-prefix-arg '(4)) "ascii")
-            ((equal current-prefix-arg 1) "ascii")
-            ((equal current-prefix-arg 2) "unicode")
-            (t "unicode")))))
-  (let* (
-         ($ascii-unicode-map
-          [
-           ["0" "０"] ["1" "１"] ["2" "２"] ["3" "３"] ["4" "４"] ["5" "５"] ["6" "６"] ["7" "７"] ["8" "８"] ["9" "９"]
-           ["A" "Ａ"] ["B" "Ｂ"] ["C" "Ｃ"] ["D" "Ｄ"] ["E" "Ｅ"] ["F" "Ｆ"] ["G" "Ｇ"] ["H" "Ｈ"] ["I" "Ｉ"] ["J" "Ｊ"] ["K" "Ｋ"] ["L" "Ｌ"] ["M" "Ｍ"] ["N" "Ｎ"] ["O" "Ｏ"] ["P" "Ｐ"] ["Q" "Ｑ"] ["R" "Ｒ"] ["S" "Ｓ"] ["T" "Ｔ"] ["U" "Ｕ"] ["V" "Ｖ"] ["W" "Ｗ"] ["X" "Ｘ"] ["Y" "Ｙ"] ["Z" "Ｚ"]
-           ["a" "ａ"] ["b" "ｂ"] ["c" "ｃ"] ["d" "ｄ"] ["e" "ｅ"] ["f" "ｆ"] ["g" "ｇ"] ["h" "ｈ"] ["i" "ｉ"] ["j" "ｊ"] ["k" "ｋ"] ["l" "ｌ"] ["m" "ｍ"] ["n" "ｎ"] ["o" "ｏ"] ["p" "ｐ"] ["q" "ｑ"] ["r" "ｒ"] ["s" "ｓ"] ["t" "ｔ"] ["u" "ｕ"] ["v" "ｖ"] ["w" "ｗ"] ["x" "ｘ"] ["y" "ｙ"] ["z" "ｚ"]
-           ["," "，"] ["." "．"] [":" "："] [";" "；"] ["!" "！"] ["?" "？"] ["\"" "＂"] ["'" "＇"] ["`" "｀"] ["^" "＾"] ["~" "～"] ["¯" "￣"] ["_" "＿"]
-           [" " "　"]
-           ["&" "＆"] ["@" "＠"] ["#" "＃"] ["%" "％"] ["+" "＋"] ["-" "－"] ["*" "＊"] ["=" "＝"] ["<" "＜"] [">" "＞"] ["(" "（"] [")" "）"] ["[" "［"] ["]" "］"] ["{" "｛"] ["}" "｝"] ["(" "｟"] [")" "｠"] ["|" "｜"] ["¦" "￤"] ["/" "／"] ["\\" "＼"] ["¬" "￢"] ["$" "＄"] ["£" "￡"] ["¢" "￠"] ["₩" "￦"] ["¥" "￥"]
-           ]
-          )
-         ($reverse-map
-          (mapcar
-           (lambda (x) (vector (elt x 1) (elt x 0)))
-           $ascii-unicode-map))
-
-         ($stateBefore
-          (if (get 'xah-convert-fullwidth-chars 'state)
-              (get 'xah-convert-fullwidth-chars 'state)
-            (progn
-              (put 'xah-convert-fullwidth-chars 'state 0)
-              0
-              )))
-         ($stateAfter (if (eq $stateBefore 0) 1 0 )))
-
-
-    (let ((case-fold-search nil))
-      (xah-replace-pairs-region
-       @begin @end
-       (cond
-        ((string= @to-direction "unicode") $ascii-unicode-map)
-        ((string= @to-direction "ascii") $reverse-map)
-        ((string= @to-direction "auto")
-         (if (eq $stateBefore 0)
-             $reverse-map
-           $ascii-unicode-map ))
-        (t (user-error "Your 3rd argument 「%s」 isn't valid" @to-direction)))
-       t t ))
-    (put 'xah-convert-fullwidth-chars 'state $stateAfter)))
-
-(defun top-join-line ()
-  "Join the current line with the line beneath it."
-  (interactive)
-  (delete-indentation 1))
 
 (provide 'fan-something)
